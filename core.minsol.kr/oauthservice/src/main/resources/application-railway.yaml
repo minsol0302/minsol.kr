@@ -1,0 +1,80 @@
+# ============================================================================
+# Railway 환경용 OAuth Service 설정
+# ============================================================================
+
+spring:
+  application:
+    name: oauthservice
+  
+  # Railway PostgreSQL 데이터베이스 설정
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      schema: minsol_oauth
+  
+  # JPA/Hibernate 설정
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        default_schema: minsol_oauth
+        jdbc:
+          time_zone: Asia/Seoul
+  
+ # Upstash Redis 설정 (TLS 필수)
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:true}
+      timeout: 2000ms
+      database: 0
+      lettuce:
+        ssl:
+          enabled: true
+          verify-peer: true
+
+server:
+  port: 8081
+
+# OAuth 설정
+oauth:
+  kakao:
+    rest-api-key: ${KAKAO_REST_API_KEY}
+    redirect-uri: ${KAKAO_REDIRECT_URI}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+    redirect-uri: ${GOOGLE_REDIRECT_URI}
+  naver:
+    client-id: ${NAVER_CLIENT_ID}
+    client-secret: ${NAVER_CLIENT_SECRET}
+    redirect-uri: ${NAVER_REDIRECT_URI}
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:2592000000}
+
+# 로깅 설정
+logging:
+  level:
+    kr.minsol: INFO
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
