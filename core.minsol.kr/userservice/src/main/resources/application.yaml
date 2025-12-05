@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: userservice
+
+server:
+  port: 8082
+
+# Eureka 설정 제거 - Gateway에서 Simple Discovery Client 사용

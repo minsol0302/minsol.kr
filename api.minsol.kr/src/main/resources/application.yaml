@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: gateway
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+    gateway:
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 30s
+        pool:
+          max-connections: 1000
+          max-idle-time: 30s
+      loadbalancer:
+        cache:
+          enabled: true
+          ttl: 35s
+      default-filters:
+        - AddRequestHeader=X-Gateway-Request, Gateway-Request
+      routes:
+        - id: auth-service-route
+          uri: http://oauthservice:8081
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/(?<segment>.*), /${segment}
+
+        - id: oauth2-kakao-route
+          uri: http://oauthservice:8081
+          predicates:
+            - Path=/oauth2/kakao/**
+          filters:
+            - RewritePath=/oauth2/kakao/(?<segment>.*), /kakao/${segment}
+
+        - id: user-service-route
+          uri: http://userservice:8082
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - RewritePath=/api/users/(?<segment>.*), /${segment}
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins:
+              - "http://localhost:3000"
+              - "http://127.0.0.1:3000"
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    use-root-path: false
+    persist-authorization: true
+  show-actuator: false
+  default-flat-param-object: true
+  writer-with-order-by-keys: true
+
+server:
+  port: 8080
