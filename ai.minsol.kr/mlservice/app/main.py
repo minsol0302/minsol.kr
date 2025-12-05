@@ -1,27 +1,54 @@
 """
 Titanic Service - FastAPI 애플리케이션
-
-Swagger 문서: http://localhost:8000/docs
-ReDoc 문서: http://localhost:8000/redoc
 """
 import sys
 import csv
+import os
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# 공통 모듈 경로 추가
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# 공통 모듈 경로 추가 (최우선)
+current_file = Path(__file__).resolve()
+base_dir = current_file.parent.parent  # /app (Docker) 또는 mlservice (로컬)
 
-from app.config import TitanicServiceConfig
-from app.titanic.router import router as titanic_router
-from app.titanic.schemas import RootResponse, Top10PassengersResponse
-from common.middleware import LoggingMiddleware
-from common.utils import setup_logging
+# 경로 추가
+base_path_str = str(base_dir)
+if base_path_str not in sys.path:
+    sys.path.insert(0, base_path_str)
 
-# 설정 로드
-config = TitanicServiceConfig()
+# Docker 환경 확인 및 /app 경로 추가
+if os.path.exists("/app"):
+    if "/app" not in sys.path:
+        sys.path.insert(0, "/app")
+
+# 설정 로드 (경로 설정 후)
+try:
+    from app.config import TitanicServiceConfig
+    config = TitanicServiceConfig()
+except Exception as e:
+    # config.py를 찾을 수 없는 경우 기본값 사용
+    class Config:
+        service_name = "mlservice"
+        service_version = "1.0.0"
+        port = 9010
+    config = Config()
+
+# 라우터 및 공통 모듈 import
+try:
+    from app.titanic.router import router as titanic_router
+    from common.middleware import LoggingMiddleware
+    from common.utils import setup_logging
+except ImportError as e:
+    # 모듈을 찾을 수 없는 경우 기본값 사용
+    from fastapi import APIRouter
+    titanic_router = APIRouter()
+    class LoggingMiddleware:
+        pass
+    def setup_logging(name):
+        import logging
+        return logging.getLogger(name)
 
 # 로깅 설정
 logger = setup_logging(config.service_name)
@@ -30,24 +57,46 @@ logger = setup_logging(config.service_name)
 app = FastAPI(
     title="Titanic Service API",
     description="""
-    타이타닉 데이터 서비스 API 문서
+    ## 타이타닉 데이터 서비스 API
     
-    ## 주요 기능
+    머신러닝을 활용한 타이타닉 승객 데이터 분석 및 생존 예측 서비스입니다.
     
-    * **승객 정보 조회**: 타이타닉 승객 데이터 조회
-    * **머신러닝 모델**: 생존 예측 모델 학습 및 예측
-    * **데이터 분석**: 데이터 통계 및 정보 조회
+    ### 주요 기능
+    - 승객 데이터 조회 및 통계 분석
+    - 머신러닝 모델 훈련 (Random Forest)
+    - 승객 생존 예측
+    - 배치 예측 지원
     
-    ## API 문서
+    ### 기술 스택
+    - **Framework**: FastAPI
+    - **ML Library**: scikit-learn, pandas, numpy
+    - **Model**: Random Forest Classifier
     
-    * Swagger UI: `/docs`
-    * ReDoc: `/redoc`
-    * OpenAPI JSON: `/openapi.json`
+    ### API 문서
+    - Swagger UI: `/docs`
+    - ReDoc: `/redoc`
+    - OpenAPI Schema: `/openapi.json`
     """,
     version=config.service_version,
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    contact={
+        "name": "ML Service Team",
+        "email": "support@labzang.com",
+    },
+    license_info={
+        "name": "MIT",
+    },
+    tags_metadata=[
+        {
+            "name": "titanic",
+            "description": "타이타닉 승객 데이터 관련 API",
+        },
+    ],
+    openapi_tags=[
+        {
+            "name": "titanic",
+            "description": "타이타닉 승객 데이터 및 머신러닝 예측 기능",
+        },
+    ],
 )
 
 # CORS 설정
@@ -66,7 +115,7 @@ app.add_middleware(LoggingMiddleware)
 app.include_router(titanic_router)
 
 # CSV 파일 경로
-CSV_FILE_PATH = Path(__file__).parent / "titanic" / "train.csv"
+CSV_FILE_PATH = Path(__file__).parent / "train.csv"
 
 
 def load_top_10_passengers():
@@ -103,19 +152,9 @@ def load_top_10_passengers():
     return passengers
 
 
-@app.get(
-    "/",
-    response_model=RootResponse,
-    summary="루트 엔드포인트",
-    description="서비스 기본 정보를 반환합니다.",
-    tags=["기본"]
-)
+@app.get("/")
 async def root():
-    """
-    루트 엔드포인트
-    
-    서비스 이름, 버전, 메시지를 반환합니다.
-    """
+    """루트 엔드포인트"""
     return {
         "service": config.service_name,
         "version": config.service_version,
@@ -123,25 +162,9 @@ async def root():
     }
 
 
-@app.get(
-    "/passengers/top10",
-    response_model=Top10PassengersResponse,
-    summary="상위 10명 승객 정보 조회",
-    description="train.csv 파일에서 상위 10명의 승객 정보를 반환합니다.",
-    tags=["승객 정보"]
-)
+@app.get("/passengers/top10")
 async def get_top_10_passengers():
-    """
-    상위 10명의 승객 정보를 반환
-    
-    - **PassengerId**: 승객 ID
-    - **Survived**: 생존 여부 (0: 사망, 1: 생존)
-    - **Pclass**: 승객 등급 (1, 2, 3)
-    - **Name**: 이름
-    - **Sex**: 성별
-    - **Age**: 나이
-    - **기타 정보**: SibSp, Parch, Ticket, Fare, Cabin, Embarked
-    """
+    """상위 10명의 승객 정보를 반환"""
     passengers = load_top_10_passengers()
     
     if not passengers:
@@ -156,18 +179,9 @@ async def get_top_10_passengers():
     }
 
 
-@app.get(
-    "/passengers/top10/print",
-    summary="상위 10명 승객 정보 터미널 출력",
-    description="상위 10명의 승객 정보를 터미널에 출력합니다. (서버 로그 확인)",
-    tags=["승객 정보"]
-)
+@app.get("/passengers/top10/print")
 async def print_top_10_passengers():
-    """
-    상위 10명의 승객 정보를 터미널에 출력
-    
-    서버 콘솔에 승객 정보를 포맷팅하여 출력합니다.
-    """
+    """상위 10명의 승객 정보를 터미널에 출력"""
     passengers = load_top_10_passengers()
     
     if not passengers:
@@ -215,4 +229,3 @@ async def shutdown_event():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=config.port)
-

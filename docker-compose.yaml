@@ -32,25 +32,6 @@
 
 services:
   # ========================================================================
-  # ML Service (FastAPI)
-  # ========================================================================
-  mlservice:
-    build:
-      context: ./ai.minsol.kr
-      dockerfile: mlservice/Dockerfile
-    container_name: mlservice
-    ports:
-      - "9000:9000"
-    networks:
-      - minsol-network
-    environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
-    env_file:
-      - .env
-    restart: on-failure
-
-  # ========================================================================
   # Gateway Service (Spring Boot)
   # ========================================================================
   gateway:
@@ -445,6 +426,38 @@ services:
       - ai
     restart: on-failure
 
+  mlservice:
+    build:
+      context: ./ai.minsol.kr
+      dockerfile: mlservice/Dockerfile
+    container_name: mlservice
+    ports:
+      - "9010:9010"
+    networks:
+      - minsol-network
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - UPSTASH_REDIS_URL=${UPSTASH_REDIS_URL}
+      - UPSTASH_REDIS_HOST=${UPSTASH_REDIS_HOST}
+      - UPSTASH_REDIS_PORT=${UPSTASH_REDIS_PORT}
+      - UPSTASH_REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
+      - REDIS_URL=${UPSTASH_REDIS_URL}
+      - REDIS_HOST=${UPSTASH_REDIS_HOST}
+      - REDIS_PORT=${UPSTASH_REDIS_PORT}
+      - REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
+      - REDIS_SSL_ENABLED=true
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    env_file:
+      - .env
+    profiles:
+      - ai
+    restart: on-failure
 # ========================================================================
 # Networks
 # ========================================================================
