@@ -143,3 +143,90 @@ async def get_model_status():
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get model status: {str(e)}")
+
+@router.get("/evaluate")
+async def evaluate_model():
+    """
+    모델 평가 실행
+    - 실행 후 모델 평가 결과 반환
+    """
+    try:
+        service = get_service()
+        
+        # 전처리 확인
+        if service.X_train is None:
+            return create_response(
+                data={"message": "전처리가 필요합니다. 먼저 /preprocess를 실행해주세요."},
+                message="Preprocessing required"
+            )
+        
+        # 모델링 및 학습
+        service.modeling()
+        service.learning()
+        
+        # 평가 실행
+        results = service.evaluate()
+        
+        # 결과 반환
+        return create_response(
+            data={
+                "results": results,
+                "message": "모델 평가가 완료되었습니다."
+            },
+            message="Model evaluation completed"
+        )
+    except Exception as e:
+        logger = setup_logging("mlservice")
+        logger.error(f"평가 오류: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to evaluate models: {str(e)}")
+
+
+@router.get("/submit")
+async def submit_model():
+    """
+    캐글 제출용 파일 생성
+    - 모델 평가를 통해 최고 성능 모델 선택
+    - 전체 train 데이터로 재학습
+    - test 데이터 예측 및 submission.csv 생성
+    - 모델 파일 및 결과 요약 저장
+    """
+    try:
+        service = get_service()
+        
+        # 전처리 확인
+        if service.X_train is None:
+            return create_response(
+                data={"message": "전처리가 필요합니다. 먼저 /preprocess를 실행해주세요."},
+                message="Preprocessing required"
+            )
+        
+        # 모델이 없으면 모델링 및 학습
+        if not service.models:
+            service.modeling()
+            service.learning()
+        
+        # 제출 실행
+        result = service.submit()
+        
+        if result is None:
+            return create_response(
+                data={"message": "제출 파일 생성에 실패했습니다."},
+                message="Failed to create submission files"
+            )
+        
+        # 결과 반환
+        return create_response(
+            data={
+                "submission_file": result["submission_file"],
+                "model_file": result["model_file"],
+                "summary_file": result["summary_file"],
+                "best_model": result["best_model"],
+                "best_accuracy": result["best_accuracy"],
+                "message": "캐글 제출 파일이 생성되었습니다. (app/download 폴더 확인)"
+            },
+            message="Submission files created successfully"
+        )
+    except Exception as e:
+        logger = setup_logging("mlservice")
+        logger.error(f"제출 오류: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to create submission files: {str(e)}")
