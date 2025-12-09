@@ -41,4 +41,3 @@ class CORSMiddleware(BaseHTTPMiddleware):
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "*"
         return response
-

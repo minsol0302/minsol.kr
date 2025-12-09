@@ -10,8 +10,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from app.titanic.titanic_service import TitanicService
-from app.titanic.titanic_model import TitanicModels
-from common.utils import create_response, create_error_response
+from common.utils import create_response, create_error_response, setup_logging
 
 router = APIRouter(prefix="/titanic", tags=["titanic"])
 
@@ -41,7 +40,6 @@ async def health_check():
     """헬스 체크"""
     try:
         service = get_service()
-        service.load_train_data()
         return create_response(
             data={"status": "healthy", "service": "titanic"},
             message="Titanic service is healthy"
@@ -54,11 +52,9 @@ async def health_check():
 async def get_passengers(limit: int = Query(default=10, ge=1, le=100, description="조회할 승객 수")):
     """승객 목록 조회"""
     try:
-        service = get_service()
-        passengers = service.get_passenger_list(limit=limit)
         return create_response(
-            data={"passengers": passengers, "count": len(passengers)},
-            message=f"Successfully retrieved {len(passengers)} passengers"
+            data={"message": "이 기능은 아직 구현되지 않았습니다."},
+            message="Passenger list endpoint is not yet implemented"
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get passengers: {str(e)}")
@@ -68,11 +64,9 @@ async def get_passengers(limit: int = Query(default=10, ge=1, le=100, descriptio
 async def get_statistics():
     """데이터 통계 정보 조회"""
     try:
-        service = get_service()
-        stats = service.get_statistics()
         return create_response(
-            data=stats,
-            message="Successfully retrieved statistics"
+            data={"message": "이 기능은 아직 구현되지 않았습니다."},
+            message="Statistics endpoint is not yet implemented"
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get statistics: {str(e)}")
@@ -87,14 +81,10 @@ async def train_model(
     """머신러닝 모델 훈련"""
     try:
         service = get_service()
-        results = service.train_model(
-            test_size=test_size,
-            random_state=random_state,
-            n_estimators=n_estimators
-        )
+        service.learning()
         return create_response(
-            data=results,
-            message=f"Model trained successfully with accuracy: {results['accuracy']:.4f}"
+            data={"message": "학습이 완료되었습니다. (터미널 로그 확인)"},
+            message="Model training completed"
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to train model: {str(e)}")
@@ -104,22 +94,10 @@ async def train_model(
 async def predict_survival(passenger_data: Dict[str, Any] = Body(..., description="승객 정보")):
     """승객 생존 예측"""
     try:
-        service = get_service()
-        
-        # 모델이 훈련되지 않은 경우
-        if service.model is None:
-            raise HTTPException(
-                status_code=400,
-                detail="Model not trained. Please train the model first by calling /titanic/train"
-            )
-        
-        prediction = service.predict(passenger_data)
         return create_response(
-            data=prediction,
-            message=f"Prediction completed. Survived: {prediction['survived']}"
+            data={"message": "이 기능은 아직 구현되지 않았습니다."},
+            message="Prediction endpoint is not yet implemented"
         )
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to predict: {str(e)}")
 
@@ -128,52 +106,40 @@ async def predict_survival(passenger_data: Dict[str, Any] = Body(..., descriptio
 async def predict_batch(passengers_data: List[Dict[str, Any]] = Body(..., description="승객 정보 리스트")):
     """여러 승객 생존 예측 (배치)"""
     try:
-        service = get_service()
-        
-        # 모델이 훈련되지 않은 경우
-        if service.model is None:
-            raise HTTPException(
-                status_code=400,
-                detail="Model not trained. Please train the model first by calling /titanic/train"
-            )
-        
-        predictions = []
-        for passenger_data in passengers_data:
-            try:
-                prediction = service.predict(passenger_data)
-                predictions.append({
-                    "passenger_data": passenger_data,
-                    "prediction": prediction
-                })
-            except Exception as e:
-                predictions.append({
-                    "passenger_data": passenger_data,
-                    "error": str(e)
-                })
-        
         return create_response(
-            data={"predictions": predictions, "count": len(predictions)},
-            message=f"Batch prediction completed for {len(predictions)} passengers"
+            data={"message": "이 기능은 아직 구현되지 않았습니다."},
+            message="Batch prediction endpoint is not yet implemented"
         )
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to predict batch: {str(e)}")
+
+
+@router.get("/preprocess")
+async def preprocess_data():
+    """데이터 전처리"""
+    try:
+        service = get_service()
+        service.preprocess()
+        return create_response(
+            data={"message": "전처리가 완료되었습니다. (터미널 로그 확인)"},
+            message="Data preprocessing completed"
+        )
+    except Exception as e:
+        logger = setup_logging("mlservice")
+        logger.error(f"전처리 오류: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to preprocess data: {str(e)}")
 
 
 @router.get("/model/status")
 async def get_model_status():
     """모델 훈련 상태 확인"""
     try:
-        service = get_service()
-        is_trained = service.model is not None
         return create_response(
             data={
-                "is_trained": is_trained,
-                "has_scaler": service.scaler is not None,
-                "has_label_encoders": len(service.label_encoders) > 0
+                "is_trained": False,
+                "message": "이 기능은 아직 구현되지 않았습니다."
             },
-            message="Model status retrieved successfully"
+            message="Model status endpoint is not yet implemented"
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get model status: {str(e)}")

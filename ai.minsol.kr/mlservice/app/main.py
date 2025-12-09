@@ -37,7 +37,7 @@ except Exception as e:
 
 # 라우터 및 공통 모듈 import
 try:
-    from app.titanic.router import router as titanic_router
+    from app.titanic.titanic_router import router as titanic_router
     from common.middleware import LoggingMiddleware
     from common.utils import setup_logging
 except ImportError as e:
@@ -97,6 +97,9 @@ app = FastAPI(
             "description": "타이타닉 승객 데이터 및 머신러닝 예측 기능",
         },
     ],
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # CORS 설정
@@ -115,7 +118,7 @@ app.add_middleware(LoggingMiddleware)
 app.include_router(titanic_router)
 
 # CSV 파일 경로
-CSV_FILE_PATH = Path(__file__).parent / "train.csv"
+CSV_FILE_PATH = Path(__file__).parent / "titanic" / "train.csv"
 
 
 def load_top_10_passengers():
@@ -210,6 +213,111 @@ async def print_top_10_passengers():
         "message": "상위 10명의 승객 정보를 터미널에 출력했습니다.",
         "count": len(passengers)
     }
+
+
+@app.get("/titanic/preprocess")
+async def preprocess_data():
+    """타이타닉 데이터 전처리 실행"""
+    try:
+        import os
+        import sys
+        import pandas as pd
+        import numpy as np
+        from io import StringIO
+        from app.titanic.titanic_service import TitanicService
+        from app.titanic.titanic_method import TitanicMethod
+        
+        # 작업 디렉토리를 titanic 폴더로 변경
+        titanic_dir = Path(__file__).parent / "titanic"
+        original_cwd = os.getcwd()
+        
+        try:
+            os.chdir(str(titanic_dir))
+            service = TitanicService()
+            
+            # preprocess 실행
+            service.preprocess()
+            
+            # 결과 수집을 위해 직접 메서드 호출
+            the_method = TitanicMethod()
+            df_train = the_method.new_model('train.csv')
+            df_test = the_method.new_model('test.csv')
+            this_train = the_method.create_df(df_train, 'Survived')
+            this_test = the_method.create_df(df_test, 'Survived')
+            
+            # 결과 데이터 구성 (안전하게 처리)
+            def safe_head_to_dict(df):
+                """DataFrame의 head를 안전하게 딕셔너리로 변환"""
+                try:
+                    if len(df) > 0:
+                        head_data = df.head(1)
+                        # NaN 값을 None으로 변환하고, 숫자 타입을 Python 기본 타입으로 변환
+                        head_dict = head_data.iloc[0].to_dict()
+                        # 값들을 JSON 직렬화 가능한 형태로 변환
+                        for key, value in head_dict.items():
+                            if pd.isna(value):
+                                head_dict[key] = None
+                            elif isinstance(value, (pd.Timestamp,)):
+                                head_dict[key] = str(value)
+                            elif isinstance(value, (np.integer,)):
+                                head_dict[key] = int(value)
+                            elif isinstance(value, (np.floating,)):
+                                head_dict[key] = float(value)
+                        return head_dict
+                    else:
+                        return {}
+                except Exception as e:
+                    logger.warning(f"head 변환 오류: {e}")
+                    return {}
+            
+            result = {
+                "status": "success",
+                "message": "데이터 전처리가 완료되었습니다.",
+                "train": {
+                    "type": str(type(this_train)),
+                    "columns": this_train.columns.tolist(),
+                    "shape": [int(this_train.shape[0]), int(this_train.shape[1])],
+                    "null_count": int(the_method.check_null(this_train)),
+                    "head": safe_head_to_dict(this_train)
+                },
+                "test": {
+                    "type": str(type(this_test)),
+                    "columns": this_test.columns.tolist(),
+                    "shape": [int(this_test.shape[0]), int(this_test.shape[1])],
+                    "null_count": int(the_method.check_null(this_test)),
+                    "head": safe_head_to_dict(this_test)
+                }
+            }
+            
+            # 터미널에도 출력
+            print("\n" + "="*80)
+            print("🍀🍀 전처리 시작")
+            print(f"1. Train 의 type: {type(this_train)}")
+            print(f"2. Train 의 column: {this_train.columns.tolist()}")
+            print(f"3. Train 의 상위 1개 행:\n{this_train.head(1)}")
+            print(f"4. Train 의 null 의 갯수: {the_method.check_null(this_train)}개")
+            print(f"5. Test 의 type: {type(this_test)}")
+            print(f"6. Test 의 column: {this_test.columns.tolist()}")
+            print(f"7. Test 의 상위 1개 행:\n{this_test.head(1)}")
+            print(f"8. Test 의 null 의 갯수: {the_method.check_null(this_test)}개")
+            print("🍀🍀 전처리 완료")
+            print("="*80 + "\n")
+            
+            return result
+        finally:
+            os.chdir(original_cwd)
+    except FileNotFoundError as e:
+        logger.error(f"파일을 찾을 수 없습니다: {e}")
+        return JSONResponse(
+            status_code=404,
+            content={"error": f"파일을 찾을 수 없습니다: {str(e)}"}
+        )
+    except Exception as e:
+        logger.error(f"전처리 오류: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"전처리 중 오류가 발생했습니다: {str(e)}"}
+        )
 
 
 @app.on_event("startup")
