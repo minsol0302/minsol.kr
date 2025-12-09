@@ -440,6 +440,9 @@ services:
       - "9010:9010"
     networks:
       - minsol-network
+    volumes:
+      # download 폴더를 호스트와 공유
+      - ./ai.minsol.kr/mlservice/app/download:/app/app/download
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - DB_HOST=${DB_HOST}
