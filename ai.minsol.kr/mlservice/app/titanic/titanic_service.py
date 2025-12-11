@@ -3,6 +3,7 @@
 판다스, 넘파이, 사이킷런을 사용한 데이터 처리 및 머신러닝 서비스
 """
 import sys
+import logging
 from pathlib import Path
 from typing import List, Dict, Optional, Any, ParamSpecArgs
 import pandas as pd
@@ -18,33 +19,19 @@ import joblib
 from app.titanic.titanic_method import TitanicMethod
 from app.titanic.titanic_dataset import TitanicDataSet
 
-# 공통 모듈 경로 추가
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-
-try:
-    from common.utils import setup_logging
-except ImportError:
-    import logging
-    def setup_logging(name: str):
-        logger = logging.getLogger(name)
-        logger.setLevel(logging.INFO)
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-        return logger
-
 class TitanicService:
     """타이타닉 데이터 처리 및 머신러닝 서비스"""
     
     def __init__(self):
-        # CSV 파일 경로 설정 (titanic 디렉토리 기준)
-        self.titanic_dir = Path(__file__).parent
+        # CSV 파일 경로 설정 (resources/titanic 디렉토리 기준)
+        self.titanic_dir = Path(__file__).parent.parent / 'resources' / 'titanic'
+        self.titanic_dir = self.titanic_dir.resolve()  # 절대 경로로 변환
         self.train_csv_path = self.titanic_dir / 'train.csv'
         self.test_csv_path = self.titanic_dir / 'test.csv'
         # Logger 설정
-        self.logger = setup_logging("mlservice")
+        self.logger = logging.getLogger(__name__)
+        
+        self.logger.info(f"CSV 파일 경로 확인 완료 - Train: {self.train_csv_path}, Test: {self.test_csv_path}")
         # 전처리된 데이터 저장
         self.dataset = None
         self.X_train = None
@@ -55,9 +42,19 @@ class TitanicService:
 
     def preprocess(self):
         self.logger.info("❤️❤️ Train 전처리 시작") 
-        the_method = TitanicMethod()
-        df_train = the_method.read_csv(str(self.train_csv_path))
-        df_test = the_method.read_csv(str(self.test_csv_path))
+        self.logger.info(f"Train CSV 경로: {self.train_csv_path}")
+        self.logger.info(f"Test CSV 경로: {self.test_csv_path}")
+        
+        try:
+            the_method = TitanicMethod()
+            df_train = the_method.read_csv(str(self.train_csv_path))
+            df_test = the_method.read_csv(str(self.test_csv_path))
+        except FileNotFoundError as e:
+            self.logger.error(f"CSV 파일을 찾을 수 없습니다: {str(e)}")
+            raise
+        except Exception as e:
+            self.logger.error(f"CSV 파일 읽기 오류: {str(e)}")
+            raise
         this_train = the_method.create_df(df_train, 'Survived')
 
         # test 데이터에는 Survived 컬럼이 없으므로 그대로 사용

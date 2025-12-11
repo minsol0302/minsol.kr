@@ -134,6 +134,14 @@ spring:
             - Path=/api/ai/chatbot/**
           filters:
             - StripPrefix=2
+            
+        # ML Services
+        - id: mlservice
+          uri: http://mlservice:9010
+          predicates:
+            - Path=/api/mlservice/**
+          filters:
+            - StripPrefix=2
 
 server:
   port: 8080

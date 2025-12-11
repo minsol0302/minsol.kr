@@ -5,12 +5,40 @@ from fastapi import APIRouter, HTTPException, Query, Body
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 import sys
+import logging
 
 # 공통 모듈 경로 추가
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from app.titanic.titanic_service import TitanicService
-from common.utils import create_response, create_error_response, setup_logging
+
+# common 모듈 import 시도
+try:
+    from common.utils import create_response, create_error_response, setup_logging
+except ImportError:
+    # common 모듈이 없을 경우 기본 함수 정의
+    import logging
+    def setup_logging(name: str):
+        return logging.getLogger(name)
+    def create_response(data: Any, message: str = "Success", status: str = "success") -> Dict:
+        from datetime import datetime
+        return {
+            "status": status,
+            "message": message,
+            "data": data,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    def create_error_response(message: str, error_code: str = "UNKNOWN_ERROR") -> Dict:
+        from datetime import datetime
+        return {
+            "status": "error",
+            "message": message,
+            "error_code": error_code,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+# Logger 초기화
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/titanic", tags=["titanic"])
 
@@ -22,7 +50,9 @@ def get_service() -> TitanicService:
     """TitanicService 싱글톤 인스턴스 반환"""
     global _service_instance
     if _service_instance is None:
+        logger.info("TitanicService 인스턴스 생성 중...")
         _service_instance = TitanicService()
+        logger.info("TitanicService 인스턴스 생성 완료")
     return _service_instance
 
 
@@ -35,17 +65,7 @@ async def titanic_root():
     )
 
 
-@router.get("/health")
-async def health_check():
-    """헬스 체크"""
-    try:
-        service = get_service()
-        return create_response(
-            data={"status": "healthy", "service": "titanic"},
-            message="Titanic service is healthy"
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Service unhealthy: {str(e)}")
+
 
 
 @router.get("/passengers")
@@ -118,16 +138,29 @@ async def predict_batch(passengers_data: List[Dict[str, Any]] = Body(..., descri
 async def preprocess_data():
     """데이터 전처리"""
     try:
+        logger.info("=" * 50)
+        logger.info("전처리 요청 수신")
+        logger.info("=" * 50)
         service = get_service()
+        logger.info("서비스 인스턴스 획득 완료, preprocess() 호출 시작")
         service.preprocess()
+        logger.info("전처리 완료")
         return create_response(
             data={"message": "전처리가 완료되었습니다. (터미널 로그 확인)"},
             message="Data preprocessing completed"
         )
+    except FileNotFoundError as e:
+        logger.error(f"파일을 찾을 수 없습니다: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=404, 
+            detail=f"파일을 찾을 수 없습니다: {str(e)}"
+        )
     except Exception as e:
-        logger = setup_logging("mlservice")
         logger.error(f"전처리 오류: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to preprocess data: {str(e)}")
+        import traceback
+        error_detail = f"Failed to preprocess data: {str(e)}\n{traceback.format_exc()}"
+        logger.error(f"상세 에러: {error_detail}")
+        raise HTTPException(status_code=500, detail=error_detail)
 
 
 @router.get("/model/status")
