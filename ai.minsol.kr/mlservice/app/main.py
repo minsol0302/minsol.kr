@@ -4,6 +4,7 @@ Titanic Service - FastAPI 애플리케이션
 import sys
 import csv
 import os
+import logging
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,23 +39,49 @@ except Exception as e:
 # 라우터 및 공통 모듈 import
 LoggingMiddleware = None
 seoul_router = None
+usa_router = None
+
+# 로깅 기본 설정 (라우터 import 전에 설정)
+logging.basicConfig(level=logging.INFO)
+logger_temp = logging.getLogger(__name__)
+
+# titanic 라우터 import
 try:
     from app.titanic.titanic_router import router as titanic_router
+except ImportError as e:
+    logger_temp.warning(f"titanic_router import 실패: {e}")
+    from fastapi import APIRouter
+    titanic_router = APIRouter()
+
+# seoul 라우터 import
+try:
     from app.seoul_crime.seoul_router import router as seoul_router
+except ImportError as e:
+    logger_temp.warning(f"seoul_router import 실패: {e}")
+    seoul_router = None
+
+# usa 라우터 import
+try:
+    from app.us_unemployment.router import router as usa_router
+    logger_temp.info("usa_router import 성공")
+except ImportError as e:
+    logger_temp.error(f"usa_router import 실패: {e}", exc_info=True)
+    from fastapi import APIRouter
+    usa_router = APIRouter()
+
+# 공통 모듈 import
+try:
     from common.middleware import LoggingMiddleware
     from common.utils import setup_logging
 except ImportError as e:
-    # 모듈을 찾을 수 없는 경우 기본값 사용
-    from fastapi import APIRouter
-    titanic_router = APIRouter()
-    seoul_router = APIRouter()
+    logger_temp = logging.getLogger(__name__)
+    logger_temp.warning(f"common 모듈 import 실패: {e}")
+    LoggingMiddleware = None
     def setup_logging(name):
         import logging
         return logging.getLogger(name)
 
-# 로깅 설정
-import logging
-logging.basicConfig(level=logging.INFO)
+# 로깅 설정 (이미 위에서 basicConfig 설정됨)
 logger = setup_logging(config.service_name)
 
 # FastAPI 앱 생성
@@ -121,6 +148,8 @@ if LoggingMiddleware is not None:
 app.include_router(titanic_router, prefix="/titanic")
 if seoul_router is not None:
     app.include_router(seoul_router, prefix="/seoul")
+if usa_router is not None:
+    app.include_router(usa_router, prefix="/usa")
 
 # CSV 파일 경로
 CSV_FILE_PATH = Path(__file__).parent / "resources" / "titanic" / "train.csv"

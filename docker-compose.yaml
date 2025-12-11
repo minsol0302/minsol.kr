@@ -444,6 +444,7 @@ services:
       # download 폴더를 호스트와 공유
       - ./ai.minsol.kr/mlservice/app/download:/app/app/download
       - ./ai.minsol.kr/mlservice/app/seoul_crime/save:/app/app/seoul_crime/save
+      - ./ai.minsol.kr/mlservice/app/us_unemployment/save:/app/app/us_unemployment/save
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - DB_HOST=${DB_HOST}

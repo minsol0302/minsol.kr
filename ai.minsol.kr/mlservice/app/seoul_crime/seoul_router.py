@@ -34,14 +34,26 @@ async def seoul_root():
         message="Seoul Service is running"
     )
 
-@router.get("/preprocess")
-async def preprocess_data():
+async def _preprocess_data():
+    """
+    데이터 전처리 및 히트맵 생성 (공통 함수)
+    
+    Returns:
+        dict: 전처리 결과 및 히트맵 생성 정보
+    """
     try:
         service = get_service()
         result = service.preprocess()
+        
+        # 히트맵 파일 경로 추가
+        from pathlib import Path
+        heatmap_path = Path(service.data.sname) / "crime_heatmap.png"
+        result["heatmap_path"] = str(heatmap_path)
+        result["heatmap_created"] = heatmap_path.exists()
+        
         return create_response(
             data=result,
-            message="데이터 전처리가 완료되었습니다"
+            message="데이터 전처리 및 히트맵 생성이 완료되었습니다"
         )
     except FileNotFoundError as e:
         raise HTTPException(
@@ -49,7 +61,30 @@ async def preprocess_data():
             detail=f"데이터 파일을 찾을 수 없습니다: {str(e)}"
         )
     except Exception as e:
+        logger.error(f"전처리 중 오류 발생: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"전처리 중 오류가 발생했습니다: {str(e)}"
         )
+
+
+@router.get("/preprocess")
+async def preprocess_data_get():
+    """
+    데이터 전처리 및 히트맵 생성 (GET)
+    
+    Returns:
+        dict: 전처리 결과 및 히트맵 생성 정보
+    """
+    return await _preprocess_data()
+
+
+@router.post("/preprocess")
+async def preprocess_data_post():
+    """
+    데이터 전처리 및 히트맵 생성 (POST)
+    
+    Returns:
+        dict: 전처리 결과 및 히트맵 생성 정보
+    """
+    return await _preprocess_data()
