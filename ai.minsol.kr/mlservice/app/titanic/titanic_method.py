@@ -3,13 +3,14 @@ import numpy as np
 from pandas import DataFrame
 from pathlib import Path
 from app.titanic.titanic_dataset import TitanicDataSet
-from icecream import ic
 from typing import Tuple
+import logging
 
 class TitanicMethod(object): 
 
     def __init__(self):
         self.dataset = TitanicDataSet()
+        self.logger = logging.getLogger(__name__)
 
     def read_csv(self, fname: str) -> pd.DataFrame:
         return pd.read_csv(fname)
@@ -59,7 +60,7 @@ class TitanicMethod(object):
         if df["Fare"].isnull().any():
             median_fare = df["Fare"].median()
             df["Fare"].fillna(median_fare, inplace=True)
-            ic(f"Fare 결측치 {df['Fare'].isnull().sum()}개를 중앙값 {median_fare}로 채웠습니다")
+            self.logger.info(f"Fare 결측치 {df['Fare'].isnull().sum()}개를 중앙값 {median_fare}로 채웠습니다")
         
         # 사분위수로 binning하여 ordinal 피처 생성
         try:
@@ -97,7 +98,7 @@ class TitanicMethod(object):
         if df["Embarked"].isnull().any():
             mode_embarked = df["Embarked"].mode()[0] if not df["Embarked"].mode().empty else "S"
             df["Embarked"].fillna(mode_embarked, inplace=True)
-            ic(f"Embarked 결측치를 최빈값 {mode_embarked}로 채웠습니다")
+            self.logger.info(f"Embarked 결측치를 최빈값 {mode_embarked}로 채웠습니다")
         
         # Label encoding: S=1, C=2, Q=3
         embarked_label_map = {
@@ -145,7 +146,7 @@ class TitanicMethod(object):
         if df["Age"].isnull().any():
             median_age = df["Age"].median()
             df["Age"].fillna(median_age, inplace=True)
-            ic(f"Age 결측치 {df['Age'].isnull().sum()}개를 중앙값 {median_age}로 채웠습니다")
+            self.logger.info(f"Age 결측치 {df['Age'].isnull().sum()}개를 중앙값 {median_age}로 채웠습니다")
         
         # 나이를 구간화하여 ordinal 피처 생성 (7개 구간: 0-6)
         df["Age"] = pd.cut(
