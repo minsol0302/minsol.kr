@@ -24,4 +24,11 @@ icecream>=2.1.0
 python-dotenv>=1.0.0
 folium>=0.14.0
 requests>=2.31.0
-playwright>=1.40.0 
+playwright>=1.40.0
+
+# 자연어 처리 (NLP)
+nltk>=3.9.0
+wordcloud>=1.9.3
+sentencepiece>=0.2.0
+konlpy>=0.6.0
+jpype1>=1.4.1 

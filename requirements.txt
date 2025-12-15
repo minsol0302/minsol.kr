@@ -1,0 +1,31 @@
+# CUDA 12.6 최적화 버전
+# PyTorch (CUDA 12.6 지원)
+# 설치 시 다음 명령어 사용: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+torch==2.9.1+cu126
+torchvision==0.24.1+cu126
+torchaudio==2.9.1+cu126
+
+# Transformers - 최신 안정 버전
+transformers==4.57.3
+
+# SentencePiece - 최신 버전
+sentencepiece==0.2.1
+
+# TorchInfo - 최신 버전
+torchinfo==1.8.0
+
+# KoNLPy - 한국어 자연어 처리
+konlpy==0.6.0
+
+# OpenCV - 최신 버전
+opencv-python==4.12.0.88
+
+# NLTK - 최신 버전
+nltk==3.9.1
+
+# WordCloud - 최신 버전
+wordcloud==1.9.4
+
+# JPype1 - KoNLPy 의존성
+jpype1==1.6.0
+

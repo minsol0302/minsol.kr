@@ -40,6 +40,7 @@ except Exception as e:
 LoggingMiddleware = None
 seoul_router = None
 usa_router = None
+nlp_router = None
 
 # 로깅 기본 설정 (라우터 import 전에 설정)
 logging.basicConfig(level=logging.INFO)
@@ -68,6 +69,15 @@ except ImportError as e:
     logger_temp.error(f"usa_router import 실패: {e}", exc_info=True)
     from fastapi import APIRouter
     usa_router = APIRouter()
+
+# nlp 라우터 import
+try:
+    from app.nlp.nlp_router import router as nlp_router
+    logger_temp.info("nlp_router import 성공")
+except ImportError as e:
+    logger_temp.error(f"nlp_router import 실패: {e}", exc_info=True)
+    from fastapi import APIRouter
+    nlp_router = APIRouter()
 
 # 공통 모듈 import
 try:
@@ -150,6 +160,11 @@ if seoul_router is not None:
     app.include_router(seoul_router, prefix="/seoul")
 if usa_router is not None:
     app.include_router(usa_router, prefix="/usa")
+if nlp_router is not None:
+    # /api/mlservice/emma 경로로 접근하기 위해 prefix를 빈 문자열로 설정
+    # 실제 경로는 /emma가 되고, Gateway에서 /api/mlservice로 rewrite되므로
+    # 최종 경로는 /api/mlservice/emma가 됩니다
+    app.include_router(nlp_router, prefix="")
 
 # CSV 파일 경로
 CSV_FILE_PATH = Path(__file__).parent / "resources" / "titanic" / "train.csv"
