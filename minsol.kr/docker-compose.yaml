@@ -1,0 +1,165 @@
+# ============================================================================
+# 통합 Docker Compose 설정
+# ============================================================================
+# Neon PostgreSQL + Upstash Redis 연동
+# profiles를 통해 서비스 그룹을 선택적으로 실행할 수 있습니다.
+#
+# 사용 예시:
+#   - Gateway만 실행:
+#     docker compose up gateway
+#
+#   - ML 서비스만 실행:
+#     docker compose up mlservice
+#
+#   - 기본 스택 실행 (gateway + oauthservice + userservice):
+#     docker compose --profile core up
+#
+#   - ERP 서비스 포함:
+#     docker compose --profile erp up
+#
+#   - AI 서비스 포함:
+#     docker compose --profile ai up
+#
+#   - 모든 서비스:
+#     docker compose --profile core --profile erp --profile ai up
+#
+#   - 백그라운드 실행:
+#     docker compose up -d gateway
+#     docker compose --profile core up -d
+#     docker compose --profile erp --profile ai up -d
+#
+# 주의사항:
+#   1. Docker Desktop이 실행 중이어야 합니다.
+#   2. 루트 디렉토리에 .env 파일 생성 (env.template 참고)
+#   3. Neon PostgreSQL과 Upstash Redis 정보를 .env에 설정
+# ============================================================================
+
+services:
+  # ========================================================================
+  # Gateway Service (Spring Boot)
+  # ========================================================================
+  gateway:
+    build:
+      context: ./api.minsol.kr
+      dockerfile: Dockerfile
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - minsol-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
+      - SPRING_DATASOURCE_URL=${DATABASE_URL}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      - SPRING_JPA_SHOW_SQL=${SPRING_JPA_SHOW_SQL:-true}
+      - SPRING_REDIS_HOST=${UPSTASH_REDIS_HOST}
+      - SPRING_REDIS_PORT=${UPSTASH_REDIS_PORT}
+      - SPRING_REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
+      - SPRING_REDIS_SSL_ENABLED=true
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_URL=${UPSTASH_REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - .env
+    restart: on-failure
+
+  # ========================================================================
+  # OAuth Service (Spring Boot)
+  # ========================================================================
+  
+
+  mlservice:
+    build:
+      context: ./ai.minsol.kr
+      dockerfile: mlservice/Dockerfile
+    container_name: mlservice
+    ports:
+      - "9010:9010"
+    networks:
+      - minsol-network
+    volumes:
+      # download 폴더를 호스트와 공유
+      - ./ai.minsol.kr/mlservice/app/download:/app/app/download
+      - ./ai.minsol.kr/mlservice/app/seoul_crime/save:/app/app/seoul_crime/save
+      - ./ai.minsol.kr/mlservice/app/us_unemployment/save:/app/app/us_unemployment/save
+      - ./ai.minsol.kr/mlservice/app/nlp/save:/app/app/nlp/save
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - UPSTASH_REDIS_URL=${UPSTASH_REDIS_URL}
+      - UPSTASH_REDIS_HOST=${UPSTASH_REDIS_HOST}
+      - UPSTASH_REDIS_PORT=${UPSTASH_REDIS_PORT}
+      - UPSTASH_REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
+      - REDIS_URL=${UPSTASH_REDIS_URL}
+      - REDIS_HOST=${UPSTASH_REDIS_HOST}
+      - REDIS_PORT=${UPSTASH_REDIS_PORT}
+      - REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
+      - REDIS_SSL_ENABLED=true
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    env_file:
+      - .env
+    profiles:
+      - ai
+    restart: on-failure
+
+  transformerservice:
+    build:
+      context: ./ai.minsol.kr
+      dockerfile: transformerservice/Dockerfile
+    container_name: transformerservice
+    ports:
+      - "9004:9004"
+    networks:
+      - minsol-network
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - UPSTASH_REDIS_URL=${UPSTASH_REDIS_URL}
+      - UPSTASH_REDIS_HOST=${UPSTASH_REDIS_HOST}
+      - UPSTASH_REDIS_PORT=${UPSTASH_REDIS_PORT}
+      - UPSTASH_REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
+      - REDIS_URL=${UPSTASH_REDIS_URL}
+      - REDIS_HOST=${UPSTASH_REDIS_HOST}
+      - REDIS_PORT=${UPSTASH_REDIS_PORT}
+      - REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
+      - REDIS_SSL_ENABLED=true
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    env_file:
+      - .env
+    profiles:
+      - ai
+    restart: on-failure
+# ========================================================================
+# Networks
+# ========================================================================
+networks:
+  minsol-network:
+    driver: bridge
+    name: minsol-network
+
+# ========================================================================
+# 사용법
+# ========================================================================
+# 1. .env 파일 생성: env.template을 참고하여 .env 파일 생성
+# 2. Neon PostgreSQL과 Upstash Redis 정보 입력
+# 3. Gateway만 실행: docker compose up gateway
+# 4. ML 서비스만 실행: docker compose up mlservice
+# 5. 기본 스택 실행 (gateway + oauthservice + userservice): docker compose --profile core up
+# 6. ERP 서비스 포함: docker compose --profile erp up
+# 7. AI 서비스 포함: docker compose --profile ai up
+# 8. 모든 서비스: docker compose --profile core --profile erp --profile ai up
+# ========================================================================
