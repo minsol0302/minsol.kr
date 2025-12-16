@@ -40,5 +40,40 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# model checkpoints
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ML/AI models and data
+*.pkl
+*.pth
+*.pt
+*.safetensors
+*.bin
+*.h5
+*.onnx
+
+# Model checkpoints and cache
 ai.minsol.kr/transformerservice/app/koelectra/koelectra_model/checkpoint-*
+ai.minsol.kr/transformerservice/app/cache/
+ai.minsol.kr/mlservice/app/download/*.pkl
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Gradle
+.gradle/
+**/bin/
+**/build/
+!gradle-wrapper.jar
+
+# Java
+*.class
+*.jar
+!gradle-wrapper.jar
