@@ -5,28 +5,24 @@
 # profiles를 통해 서비스 그룹을 선택적으로 실행할 수 있습니다.
 #
 # 사용 예시:
-#   - Gateway만 실행:
-#     docker compose up gateway
+#   - Gateway만 실행 (OAuth 및 Admin 기능 포함):
+#     docker compose -f docker-compose.local.yaml up gateway
 #
 #   - ML 서비스만 실행:
-#     docker compose up mlservice
-#
-#   - 기본 스택 실행 (gateway + oauthservice + userservice):
-#     docker compose --profile core up
+#     docker compose -f docker-compose.local.yaml up mlservice
 #
 #   - ERP 서비스 포함:
-#     docker compose --profile erp up
+#     docker compose -f docker-compose.local.yaml --profile erp up
 #
 #   - AI 서비스 포함:
-#     docker compose --profile ai up
+#     docker compose -f docker-compose.local.yaml --profile ai up
 #
 #   - 모든 서비스:
-#     docker compose --profile core --profile erp --profile ai up
+#     docker compose -f docker-compose.local.yaml --profile erp --profile ai up
 #
 #   - 백그라운드 실행:
-#     docker compose up -d gateway
-#     docker compose --profile core up -d
-#     docker compose --profile erp --profile ai up -d
+#     docker compose -f docker-compose.local.yaml up -d gateway
+#     docker compose -f docker-compose.local.yaml --profile erp --profile ai up -d
 #
 # 주의사항:
 #   1. Docker Desktop이 실행 중이어야 합니다.
@@ -37,99 +33,49 @@
 services:
   # ========================================================================
   # Gateway Service (Spring Boot)
+  # OAuth Service와 Admin Service가 통합되어 있습니다.
   # ========================================================================
   gateway:
     build:
-      context: ./api.minsol.kr
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./api.minsol.kr/Dockerfile
     container_name: gateway
     ports:
       - "8080:8080"
     networks:
       - minsol-network
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - SPRING_DATASOURCE_URL=${DATABASE_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
-      - SPRING_JPA_SHOW_SQL=${SPRING_JPA_SHOW_SQL:-true}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      - SPRING_JPA_SHOW_SQL=${SPRING_JPA_SHOW_SQL}
       - SPRING_REDIS_HOST=${UPSTASH_REDIS_HOST}
       - SPRING_REDIS_PORT=${UPSTASH_REDIS_PORT}
       - SPRING_REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
-      - SPRING_REDIS_SSL_ENABLED=true
+      - SPRING_REDIS_SSL_ENABLED=${SPRING_REDIS_SSL_ENABLED}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_URL=${UPSTASH_REDIS_URL}
+      - REDIS_ENABLED=${REDIS_ENABLED}
+      # JWT 설정
       - JWT_SECRET=${JWT_SECRET}
-    env_file:
-      - .env
-    restart: on-failure
-
-  # ========================================================================
-  # OAuth Service (Spring Boot)
-  # ========================================================================
-  oauthservice:
-    build:
-      context: ./core.minsol.kr/oauthservice
-      dockerfile: Dockerfile
-    container_name: oauthservice
-    ports:
-      - "8081:8081"
-    networks:
-      - minsol-network
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
-      - SPRING_DATASOURCE_URL=${DATABASE_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
-      - SPRING_REDIS_HOST=${UPSTASH_REDIS_HOST}
-      - SPRING_REDIS_PORT=${UPSTASH_REDIS_PORT}
-      - SPRING_REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
-      - SPRING_REDIS_SSL_ENABLED=true
-      - REDIS_HOST=${UPSTASH_REDIS_HOST}
-      - REDIS_PORT=${UPSTASH_REDIS_PORT}
-      - REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
-      - REDIS_URL=${UPSTASH_REDIS_URL}
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_TOKEN_EXPIRATION=${JWT_ACCESS_TOKEN_EXPIRATION}
+      - JWT_REFRESH_TOKEN_EXPIRATION=${JWT_REFRESH_TOKEN_EXPIRATION}
+      # OAuth 설정 (Kakao, Google, Naver)
       - KAKAO_REST_API_KEY=${KAKAO_REST_API_KEY}
       - KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI}
-      - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
-      - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
-      - NAVER_REDIRECT_URI=${NAVER_REDIRECT_URI}
+      - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
+      - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
+      - NAVER_REDIRECT_URI=${NAVER_REDIRECT_URI}
     env_file:
       - .env
-    profiles:
-      - core
-    restart: on-failure
-
-  # ========================================================================
-  # User Service (Spring Boot)
-  # ========================================================================
-  userservice:
-    build:
-      context: ./core.minsol.kr/userservice
-      dockerfile: Dockerfile
-    container_name: userservice
-    ports:
-      - "8082:8082"
-    networks:
-      - minsol-network
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
-      - SPRING_DATASOURCE_URL=${DATABASE_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
-    env_file:
-      - .env
-    profiles:
-      - core
     restart: on-failure
 
   # ========================================================================
@@ -515,10 +461,18 @@ networks:
 # ========================================================================
 # 1. .env 파일 생성: env.template을 참고하여 .env 파일 생성
 # 2. Neon PostgreSQL과 Upstash Redis 정보 입력
-# 3. Gateway만 실행: docker compose up gateway
-# 4. ML 서비스만 실행: docker compose up mlservice
-# 5. 기본 스택 실행 (gateway + oauthservice + userservice): docker compose --profile core up
-# 6. ERP 서비스 포함: docker compose --profile erp up
-# 7. AI 서비스 포함: docker compose --profile ai up
-# 8. 모든 서비스: docker compose --profile core --profile erp --profile ai up
+# 3. OAuth 설정 (Kakao, Google, Naver) 환경 변수 설정
+# 4. Gateway만 실행 (OAuth 및 Admin 기능 포함):
+#    docker compose -f docker-compose.local.yaml up gateway
+# 5. ML 서비스만 실행:
+#    docker compose -f docker-compose.local.yaml up mlservice
+# 6. ERP 서비스 포함:
+#    docker compose -f docker-compose.local.yaml --profile erp up
+# 7. AI 서비스 포함:
+#    docker compose -f docker-compose.local.yaml --profile ai up
+# 8. 모든 서비스:
+#    docker compose -f docker-compose.local.yaml --profile erp --profile ai up
+#
+# 참고: OAuth Service와 Admin Service는 Gateway에 통합되어 있습니다.
+#       별도로 실행할 필요가 없습니다.
 # ========================================================================

@@ -1,8 +1,0 @@
-rootProject.name = 'services'
-
-include 'oauthservice'
-include 'userservice'
-
-project(':oauthservice').projectDir = file('oauthservice')
-project(':userservice').projectDir = file('userservice')
-

@@ -3,83 +3,35 @@ spring:
     name: gateway
   config:
     import: "optional:configserver:"
+  
+  # Redis 설정 (로컬 개발용 - 선택적, Redis가 없어도 애플리케이션은 시작됨)
+  # OAuth Service와 공통 사용
+  # Redis를 사용하려면 spring.data.redis.enabled=true로 설정하세요
+  data:
+    redis:
+      enabled: ${REDIS_ENABLED:false}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      username: default
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${SPRING_REDIS_SSL_ENABLED:false}
+      timeout: 2000ms
+      lettuce:
+        ssl:
+          enabled: ${SPRING_REDIS_SSL_ENABLED:false}
+          verify-peer: false
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+        shutdown-timeout: 100ms
+  
   cloud:
     config:
       enabled: false
       import-check:
         enabled: false
-    gateway:
-      httpclient:
-        connect-timeout: 10000
-        response-timeout: 30s
-        pool:
-          max-connections: 1000
-          max-idle-time: 30s
-      loadbalancer:
-        cache:
-          enabled: true
-          ttl: 35s
-      default-filters:
-        - AddRequestHeader=X-Gateway-Request, Gateway-Request
-      routes:
-        - id: auth-service-route
-          uri: http://oauthservice:8081
-          predicates:
-            - Path=/api/auth/**
-          filters:
-            - RewritePath=/api/auth/(?<segment>.*), /${segment}
-
-        - id: oauth2-kakao-route
-          uri: http://oauthservice:8081
-          predicates:
-            - Path=/oauth2/kakao/**
-          filters:
-            - RewritePath=/oauth2/kakao/(?<segment>.*), /kakao/${segment}
-
-        - id: user-service-route
-          uri: http://userservice:8082
-          predicates:
-            - Path=/api/users/**
-          filters:
-            - RewritePath=/api/users/(?<segment>.*), /${segment}
-
-        - id: mlservice-route
-          uri: http://mlservice:9010
-          predicates:
-            - Path=/api/mlservice/**
-          filters:
-            - RewritePath=/api/mlservice/(?<segment>.*), /${segment}
-
-        - id: transformerservice-openapi-route
-          uri: http://transformerservice:9004
-          predicates:
-            - Path=/koelectra/openapi.json
-          filters:
-            - RewritePath=/koelectra/openapi.json, /openapi.json
-
-        - id: transformerservice-route
-          uri: http://transformerservice:9004
-          predicates:
-            - Path=/koelectra/**
-          filters:
-            - RewritePath=/koelectra/(?<segment>.*), /koelectra/${segment}
-
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowed-origins:
-              - "http://localhost:3000"
-              - "http://127.0.0.1:3000"
-            allowed-methods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-              - PATCH
-            allowed-headers: "*"
-            allow-credentials: true
-            max-age: 3600
 
 springdoc:
   api-docs:
@@ -104,3 +56,32 @@ springdoc:
 
 server:
   port: 8080
+
+# ============================================================================
+# OAuth Service 설정 (core.minsol.kr/oauthservice 통합)
+# ============================================================================
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY:}
+  redirect-uri: ${KAKAO_REDIRECT_URI:}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID:}
+  client-secret: ${GOOGLE_CLIENT_SECRET:}
+  redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/google/callback}
+
+naver:
+  client-id: ${NAVER_CLIENT_ID:}
+  client-secret: ${NAVER_CLIENT_SECRET:}
+  redirect-uri: ${NAVER_REDIRECT_URI:}
+
+# JWT 설정 (OAuth Service와 공통 사용)
+jwt:
+  secret: ${JWT_SECRET:}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000} # 기본 1시간
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:2592000000} # 기본 30일
+
+# ============================================================================
+# User Service 설정 (core.minsol.kr/adminservice 통합)
+# ============================================================================
+# User Service는 별도 포트(8082)에서 실행되며, Gateway를 통해 라우팅됩니다.
+# 로컬 개발 시에는 별도로 실행해야 합니다.

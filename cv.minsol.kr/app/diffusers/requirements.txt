@@ -1,0 +1,12 @@
+torch
+torchvision
+torchaudio
+diffusers
+transformers
+accelerate
+safetensors
+pillow
+numpy
+fastapi
+uvicorn[standard]
+# xformers  # 선택적 패키지 - PyTorch 버전과 호환성 문제 시 제거

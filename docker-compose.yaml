@@ -40,29 +40,43 @@ services:
   # ========================================================================
   gateway:
     build:
-      context: ./api.minsol.kr
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./api.minsol.kr/Dockerfile
     container_name: gateway
     ports:
       - "8080:8080"
     networks:
       - minsol-network
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - SPRING_DATASOURCE_URL=${DATABASE_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
-      - SPRING_JPA_SHOW_SQL=${SPRING_JPA_SHOW_SQL:-true}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      - SPRING_JPA_SHOW_SQL=${SPRING_JPA_SHOW_SQL}
       - SPRING_REDIS_HOST=${UPSTASH_REDIS_HOST}
       - SPRING_REDIS_PORT=${UPSTASH_REDIS_PORT}
       - SPRING_REDIS_PASSWORD=${UPSTASH_REDIS_PASSWORD}
-      - SPRING_REDIS_SSL_ENABLED=true
+      - SPRING_REDIS_SSL_ENABLED=${SPRING_REDIS_SSL_ENABLED}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_URL=${UPSTASH_REDIS_URL}
+      - REDIS_ENABLED=${REDIS_ENABLED}
+      # JWT 설정
       - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_TOKEN_EXPIRATION=${JWT_ACCESS_TOKEN_EXPIRATION}
+      - JWT_REFRESH_TOKEN_EXPIRATION=${JWT_REFRESH_TOKEN_EXPIRATION}
+      # OAuth 설정 (Kakao, Google, Naver)
+      - KAKAO_REST_API_KEY=${KAKAO_REST_API_KEY}
+      - KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI}
+      - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
+      - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
+      - NAVER_REDIRECT_URI=${NAVER_REDIRECT_URI}
     env_file:
       - .env
     restart: on-failure
@@ -70,7 +84,7 @@ services:
   # ========================================================================
   # OAuth Service (Spring Boot)
   # ========================================================================
-  
+
 
   mlservice:
     build:
