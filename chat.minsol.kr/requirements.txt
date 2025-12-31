@@ -1,0 +1,25 @@
+# FastAPI Backend Dependencies
+# OpenAI API 기반 - EC2 서버는 API 요청만 처리 (로컬 LLM 불필요)
+
+# Web framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-multipart>=0.0.6
+
+# LangChain and AI
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-core>=0.1.0
+langchain-openai>=0.1.0
+openai>=1.0.0
+
+# OpenAI API Support
+# openai 패키지는 이미 langchain-openai에 포함되어 있지만 명시적으로 추가
+# Local Model Support는 제거 (OpenAI 전용으로 전환)
+
+# Database
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
+pgvector>=0.2.0
