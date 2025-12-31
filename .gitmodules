@@ -5,3 +5,7 @@
 [submodule "api.minsol.kr"]
 	path = api.minsol.kr
 	url = https://github.com/minsol0302/minsol.kr.api.git
+
+[submodule "chat.minsol.kr"]
+	path = chat.minsol.kr
+	url = https://github.com/minsol0302/minsol.kr.chat.git
