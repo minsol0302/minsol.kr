@@ -1,0 +1,7 @@
+[submodule "vision.minsol.kr"]
+	path = vision.minsol.kr
+	url = https://github.com/minsol0302/minsol.kr.vision.git
+
+[submodule "api.minsol.kr"]
+	path = api.minsol.kr
+	url = https://github.com/minsol0302/minsol.kr.api.git
