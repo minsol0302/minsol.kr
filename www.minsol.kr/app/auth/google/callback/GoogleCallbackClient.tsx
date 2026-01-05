@@ -29,8 +29,9 @@ export default function GoogleCallbackClient() {
 
     async function handleCallback(code: string) {
         try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
             const response = await fetch(
-                `http://localhost:8080/api/auth/google/callback?code=${encodeURIComponent(code)}`,
+                `${apiUrl}/api/auth/google/callback?code=${encodeURIComponent(code)}`,
                 {
                     method: 'GET',
                     credentials: 'include',

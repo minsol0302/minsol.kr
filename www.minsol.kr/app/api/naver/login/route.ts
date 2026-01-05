@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
     try {
         // 백엔드 서버로 요청 프록시
-        const backendUrl = 'http://localhost:8080/naver/login';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+        const backendUrl = `${apiUrl}/api/auth/naver/login`;
 
         // 요청 body를 읽어서 백엔드로 전달
         const body = await request.json().catch(() => ({}));

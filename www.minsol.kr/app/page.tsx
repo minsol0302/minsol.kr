@@ -43,7 +43,8 @@ export default function Home() {
   };
 
   async function callGoogleGateway() {
-    const res = await fetch("http://localhost:8080/api/auth/google/login", {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+    const res = await fetch(`${apiUrl}/api/auth/google/login`, {
       method: "POST",
       credentials: "include", // 쿠키를 쓰면 필요
       headers: {
@@ -98,7 +99,8 @@ export default function Home() {
   };
 
   async function callGateway() {
-    const res = await fetch("http://localhost:8080/api/auth/kakao/login", {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+    const res = await fetch(`${apiUrl}/api/auth/kakao/login`, {
       method: "POST",
       credentials: "include", // 쿠키를 쓰면 필요
       headers: {
@@ -153,7 +155,8 @@ export default function Home() {
   };
 
   async function callNaverGateway() {
-    const res = await fetch("http://localhost:8080/api/auth/naver/login", {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+    const res = await fetch(`${apiUrl}/api/auth/naver/login`, {
       method: "POST",
       credentials: "include", // 쿠키를 쓰면 필요
       headers: {

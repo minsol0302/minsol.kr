@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
         }
 
         // 백엔드 콜백 엔드포인트로 프록시
-        const backendUrl = `http://localhost:8080`;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+        const backendUrl = `${apiUrl}/api/auth/google/callback?code=${encodeURIComponent(code)}`;
         console.log('백엔드로 요청 전송:', backendUrl.substring(0, 80) + '...');
 
         const response = await fetch(backendUrl, {
