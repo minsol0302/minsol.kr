@@ -29,40 +29,46 @@ export default function NaverCallbackClient() {
 
     async function handleCallback(code: string) {
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+            // Naver는 state 파라미터도 필요
+            const state = searchParams.get('state');
+            
+            console.log('[Naver Callback Client] Next.js API 라우트로 요청 전송');
+            // Next.js API 라우트를 통해 요청 (서버 사이드 프록시)
             const response = await fetch(
-                `${apiUrl}/api/auth/naver/callback`,
+                '/api/naver/callback',
                 {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ code }),
+                    body: JSON.stringify({ code, state }),
                 }
             );
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log('네이버 로그인 성공:', data);
+            console.log('[Naver Callback Client] API 응답 상태:', response.status);
 
-                // 성공 메시지 확인 후 대시보드로 이동
-                if (
-                    data.success === true ||
-                    data.message === "네이버 로그인 성공" ||
-                    data.message === "로그인 성공"
-                ) {
-                    router.push('/dashboard/naver');
-                    return;
-                }
+            const data = await response.json();
+            console.log('[Naver Callback Client] API 응답 데이터:', data);
+
+            if (data.success === true || response.ok) {
+                const redirectUrl = data.redirectUrl || '/dashboard/naver';
+                console.log('[Naver Callback Client] 로그인 성공, 리다이렉트:', redirectUrl);
+                router.push(redirectUrl);
+                return;
             }
 
-            // 백엔드 응답이 성공적이면 대시보드로 이동
-            router.push('/dashboard/naver');
+            // 실패한 경우
+            console.error('[Naver Callback Client] 로그인 실패:', data);
+            if (data.redirectUrl) {
+                router.push(data.redirectUrl);
+            } else {
+                router.push('/');
+            }
         } catch (error) {
-            console.error('네이버 콜백 처리 오류:', error);
-            // 에러 발생 시에도 대시보드로 이동 시도
-            router.push('/dashboard/naver');
+            console.error('[Naver Callback Client] 예외 발생:', error);
+            console.error('[Naver Callback Client] 에러 스택:', error instanceof Error ? error.stack : '스택 없음');
+            router.push('/');
         }
     }
 
