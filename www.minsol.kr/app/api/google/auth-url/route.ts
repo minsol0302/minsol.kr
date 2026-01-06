@@ -3,8 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
     try {
         // 백엔드 서버로 요청 프록시
-        // 서버 측에서는 NEXT_PUBLIC_ 접두사 없이 환경 변수 사용 가능
-        const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+        // 환경 변수에서 API URL 가져오기 (프로토콜이 없으면 추가)
+        let apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+        
+        // 프로토콜이 없으면 https:// 추가
+        if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
+            apiUrl = `https://${apiUrl}`;
+        }
+        
         const backendUrl = `${apiUrl}/api/auth/google/auth-url`;
 
         console.log('[Google Auth-URL] 백엔드 요청 URL:', backendUrl);
