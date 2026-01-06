@@ -1,13 +1,29 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // URL 파라미터에서 에러 확인 및 콘솔에 출력
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error) {
+      console.error('[로그인 페이지] URL 파라미터에서 에러 감지:', decodeURIComponent(error));
+      console.error('[로그인 페이지] 전체 URL:', window.location.href);
+      // URL에서 에러 파라미터 제거
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      router.replace(newUrl.pathname + newUrl.search);
+    }
+  }, [searchParams, router]);
 
   const handleGoogleLogin = async () => {
     // 구글 로그인 로직 추가
     try {
+      console.log('[구글 로그인] 시작');
       // Next.js API 라우트를 통해 인증 URL을 가져옴
       const authUrlResponse = await fetch('/api/google/auth-url', {
         method: "POST",
@@ -17,27 +33,44 @@ export default function Home() {
         body: JSON.stringify({}),
       });
 
+      console.log('[구글 로그인] API 응답 상태:', authUrlResponse.status);
+
       if (!authUrlResponse.ok) {
-        throw new Error(`HTTP error! status: ${authUrlResponse.status}`);
+        const errorData = await authUrlResponse.json().catch(() => ({}));
+        const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${authUrlResponse.status}`;
+        console.error('[구글 로그인] 오류 상세:', {
+          status: authUrlResponse.status,
+          statusText: authUrlResponse.statusText,
+          error: errorData,
+          message: errorMessage
+        });
+        alert(`구글 로그인 실패: ${errorMessage}`);
+        return;
       }
 
       const authUrlData = await authUrlResponse.json();
+      console.log('[구글 로그인] 응답 데이터:', authUrlData);
       const authUrl = authUrlData.auth_url;
 
       if (authUrl) {
+        console.log('[구글 로그인] 인증 URL로 리다이렉트:', authUrl);
         // 인증 URL로 리다이렉트
         window.location.href = authUrl;
       } else {
-        console.error("구글 인증 URL을 받을 수 없습니다.");
+        console.error('[구글 로그인] 인증 URL이 응답에 없습니다:', authUrlData);
+        alert('구글 인증 URL을 받을 수 없습니다.');
       }
     } catch (error) {
-      console.error("구글 로그인 실패:", error);
+      console.error('[구글 로그인] 예외 발생:', error);
+      console.error('[구글 로그인] 에러 스택:', error instanceof Error ? error.stack : '스택 없음');
+      alert(`구글 로그인 중 오류가 발생했습니다. 콘솔을 확인하세요.`);
     }
   };
 
   const handleKakaoLogin = async () => {
     // 카카오 로그인 로직 추가
     try {
+      console.log('[카카오 로그인] 시작');
       // Next.js API 라우트를 통해 인증 URL을 가져옴
       const authUrlResponse = await fetch('/api/kakao/auth-url', {
         method: "POST",
@@ -47,27 +80,44 @@ export default function Home() {
         body: JSON.stringify({}),
       });
 
+      console.log('[카카오 로그인] API 응답 상태:', authUrlResponse.status);
+
       if (!authUrlResponse.ok) {
-        throw new Error(`HTTP error! status: ${authUrlResponse.status}`);
+        const errorData = await authUrlResponse.json().catch(() => ({}));
+        const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${authUrlResponse.status}`;
+        console.error('[카카오 로그인] 오류 상세:', {
+          status: authUrlResponse.status,
+          statusText: authUrlResponse.statusText,
+          error: errorData,
+          message: errorMessage
+        });
+        alert(`카카오 로그인 실패: ${errorMessage}`);
+        return;
       }
 
       const authUrlData = await authUrlResponse.json();
+      console.log('[카카오 로그인] 응답 데이터:', authUrlData);
       const authUrl = authUrlData.auth_url;
 
       if (authUrl) {
+        console.log('[카카오 로그인] 인증 URL로 리다이렉트:', authUrl);
         // 인증 URL로 리다이렉트
         window.location.href = authUrl;
       } else {
-        console.error("카카오 인증 URL을 받을 수 없습니다.");
+        console.error('[카카오 로그인] 인증 URL이 응답에 없습니다:', authUrlData);
+        alert('카카오 인증 URL을 받을 수 없습니다.');
       }
     } catch (error) {
-      console.error("카카오 로그인 실패:", error);
+      console.error('[카카오 로그인] 예외 발생:', error);
+      console.error('[카카오 로그인] 에러 스택:', error instanceof Error ? error.stack : '스택 없음');
+      alert(`카카오 로그인 중 오류가 발생했습니다. 콘솔을 확인하세요.`);
     }
   };
 
   const handleNaverLogin = async () => {
     // 네이버 로그인 로직 추가
     try {
+      console.log('[네이버 로그인] 시작');
       // Next.js API 라우트를 통해 인증 URL을 가져옴
       const authUrlResponse = await fetch('/api/naver/auth-url', {
         method: "POST",
@@ -77,21 +127,37 @@ export default function Home() {
         body: JSON.stringify({}),
       });
 
+      console.log('[네이버 로그인] API 응답 상태:', authUrlResponse.status);
+
       if (!authUrlResponse.ok) {
-        throw new Error(`HTTP error! status: ${authUrlResponse.status}`);
+        const errorData = await authUrlResponse.json().catch(() => ({}));
+        const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${authUrlResponse.status}`;
+        console.error('[네이버 로그인] 오류 상세:', {
+          status: authUrlResponse.status,
+          statusText: authUrlResponse.statusText,
+          error: errorData,
+          message: errorMessage
+        });
+        alert(`네이버 로그인 실패: ${errorMessage}`);
+        return;
       }
 
       const authUrlData = await authUrlResponse.json();
+      console.log('[네이버 로그인] 응답 데이터:', authUrlData);
       const authUrl = authUrlData.auth_url;
 
       if (authUrl) {
+        console.log('[네이버 로그인] 인증 URL로 리다이렉트:', authUrl);
         // 인증 URL로 리다이렉트
         window.location.href = authUrl;
       } else {
-        console.error("네이버 인증 URL을 받을 수 없습니다.");
+        console.error('[네이버 로그인] 인증 URL이 응답에 없습니다:', authUrlData);
+        alert('네이버 인증 URL을 받을 수 없습니다.');
       }
     } catch (error) {
-      console.error("네이버 로그인 실패:", error);
+      console.error('[네이버 로그인] 예외 발생:', error);
+      console.error('[네이버 로그인] 에러 스택:', error instanceof Error ? error.stack : '스택 없음');
+      alert(`네이버 로그인 중 오류가 발생했습니다. 콘솔을 확인하세요.`);
     }
   };
 
