@@ -1,25 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+    // 백엔드 서버로 요청 프록시
+    // 환경 변수에서 API URL 가져오기 (프로토콜이 없으면 추가)
+    let apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+
+    // 프로토콜이 없으면 https:// 추가
+    if (apiUrl && !apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
+        apiUrl = `https://${apiUrl}`;
+    }
+
+    const backendUrl = `${apiUrl}/api/auth/naver/auth-url`;
+
+    console.log('[Naver Auth-URL] 시작 - 백엔드 URL:', backendUrl);
+
     try {
-        // 백엔드 서버로 요청 프록시
-        // 환경 변수에서 API URL 가져오기 (프로토콜이 없으면 추가)
-        let apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-
-        // 프로토콜이 없으면 https:// 추가
-        if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-            apiUrl = `https://${apiUrl}`;
-        }
-
-        const backendUrl = `${apiUrl}/api/auth/naver/auth-url`;
-
-        console.log('[Naver Auth-URL] 백엔드 요청 URL:', backendUrl);
 
         // 요청 body를 읽어서 백엔드로 전달 (빈 body 허용)
         let body = {};
         try {
-            const requestBody = await request.json();
-            body = requestBody || {};
+            const contentType = request.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const text = await request.text();
+                if (text) {
+                    body = JSON.parse(text);
+                }
+            }
         } catch (e) {
             body = {};
         }
@@ -77,14 +83,27 @@ export async function POST(request: NextRequest) {
             throw fetchError;
         }
     } catch (error) {
-        console.error('[Naver Auth-URL] 오류 발생:', error);
+        console.error('[Naver Auth-URL] 예외 발생:', error);
         const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+        const errorName = error instanceof Error ? error.name : 'Unknown';
+
+        if (errorName === 'TypeError' && errorMessage.includes('fetch')) {
+            console.error('[Naver Auth-URL] 네트워크 에러 - 백엔드 서버에 연결할 수 없습니다:', backendUrl);
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: '네트워크 에러',
+                    message: `백엔드 서버에 연결할 수 없습니다. (${backendUrl})`,
+                },
+                { status: 503 }
+            );
+        }
 
         return NextResponse.json(
             {
                 success: false,
-                error: '백엔드 서버에 연결할 수 없습니다.',
-                message: errorMessage
+                error: '서버 오류',
+                message: errorMessage || '알 수 없는 오류가 발생했습니다.'
             },
             { status: 500 }
         );
