@@ -31,13 +31,14 @@ export default function NaverCallbackClient() {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
             const response = await fetch(
-                `${apiUrl}/api/auth/naver/callback?code=${encodeURIComponent(code)}`,
+                `${apiUrl}/api/auth/naver/callback`,
                 {
-                    method: 'GET',
+                    method: 'POST',
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({ code }),
                 }
             );
 

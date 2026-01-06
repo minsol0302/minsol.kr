@@ -31,13 +31,14 @@ export default function KakaoCallbackClient() {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
             const response = await fetch(
-                `${apiUrl}/api/auth/kakao/callback?code=${encodeURIComponent(code)}`,
+                `${apiUrl}/api/auth/kakao/callback`,
                 {
-                    method: 'GET',
+                    method: 'POST',
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({ code }),
                 }
             );
 

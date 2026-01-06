@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { handleLoginSuccess } from '@/services/mainservice';
 
 export async function GET(request: NextRequest) {
     try {
@@ -32,9 +33,45 @@ export async function GET(request: NextRequest) {
                 'Content-Type': 'application/json',
             },
             credentials: 'include',
+            redirect: 'manual', // 리다이렉트를 자동으로 따라가지 않음
         });
 
         console.log('백엔드 응답 상태:', response.status);
+
+        // 백엔드가 리다이렉트(3xx)를 반환하는 경우
+        if (response.status >= 300 && response.status < 400) {
+            const redirectUrl = response.headers.get('Location');
+            if (redirectUrl) {
+                console.log('백엔드 리다이렉트 URL:', redirectUrl);
+
+                // 리다이렉트 URL에서 토큰 파라미터 추출
+                const redirectUrlObj = new URL(redirectUrl);
+                const token = redirectUrlObj.searchParams.get('token');
+                const refreshToken = redirectUrlObj.searchParams.get('refresh_token');
+                const errorParam = redirectUrlObj.searchParams.get('error');
+
+                if (errorParam) {
+                    console.error('백엔드 에러:', errorParam);
+                    return NextResponse.redirect(new URL('/', request.url));
+                }
+
+                // 🔒 Refresh Token을 HttpOnly 쿠키에 저장
+                const nextResponse = NextResponse.redirect(new URL('/dashboard/naver', request.url));
+
+                if (refreshToken) {
+                    return handleLoginSuccess(
+                        nextResponse,
+                        refreshToken,
+                        {
+                            maxAge: 30 * 24 * 60 * 60, // 30일
+                            redirectUrl: new URL('/dashboard/naver', request.url).toString(),
+                        }
+                    );
+                }
+
+                return nextResponse;
+            }
+        }
 
         if (!response.ok) {
             const errorText = await response.text().catch(() => '');
@@ -48,6 +85,20 @@ export async function GET(request: NextRequest) {
         try {
             const data = await response.json();
             console.log('백엔드 응답 데이터:', data);
+
+            // 🔒 백엔드에서 refresh_token을 JSON으로 반환하는 경우
+            const refreshToken = data.refresh_token || data.refreshToken;
+            if (refreshToken) {
+                const nextResponse = NextResponse.redirect(new URL('/dashboard/naver', request.url));
+                return handleLoginSuccess(
+                    nextResponse,
+                    refreshToken,
+                    {
+                        maxAge: 30 * 24 * 60 * 60, // 30일
+                        redirectUrl: new URL('/dashboard/naver', request.url).toString(),
+                    }
+                );
+            }
 
             // 백엔드에서 로그인 성공 메시지가 오면 대시보드로 리다이렉트
             // 다양한 메시지 형식 지원
