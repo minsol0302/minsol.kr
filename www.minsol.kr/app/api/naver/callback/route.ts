@@ -37,14 +37,28 @@ export async function POST(request: NextRequest) {
         const backendUrl = `${apiUrl}/api/auth/naver/callback`;
 
         console.log('[Naver Callback POST] 백엔드로 요청 전송:', backendUrl);
+        console.log('[Naver Callback POST] 요청 body:', { code: code?.substring(0, 20) + '...', state });
 
-        const response = await fetch(backendUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ code, state }),
-        });
+        let response;
+        try {
+            response = await fetch(backendUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code, state }),
+            });
+        } catch (fetchError) {
+            console.error('[Naver Callback POST] Fetch 에러:', fetchError);
+            console.error('[Naver Callback POST] Fetch 에러 타입:', fetchError instanceof Error ? fetchError.constructor.name : typeof fetchError);
+            console.error('[Naver Callback POST] Fetch 에러 메시지:', fetchError instanceof Error ? fetchError.message : String(fetchError));
+            return NextResponse.json({
+                success: false,
+                error: '백엔드 서버에 연결할 수 없습니다.',
+                message: fetchError instanceof Error ? fetchError.message : '네트워크 오류',
+                redirectUrl: '/'
+            }, { status: 503 });
+        }
 
         console.log('[Naver Callback POST] 백엔드 응답 상태:', response.status);
 

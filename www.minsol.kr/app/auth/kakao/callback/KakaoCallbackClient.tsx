@@ -29,7 +29,7 @@ export default function KakaoCallbackClient() {
 
     async function handleCallback(code: string) {
         try {
-            console.log('[Kakao Callback Client] Next.js API 라우트로 요청 전송');
+            console.log('[Kakao Callback Client] Next.js API 라우트로 요청 전송, code:', code?.substring(0, 20) + '...');
             // Next.js API 라우트를 통해 요청 (서버 사이드 프록시)
             const response = await fetch(
                 '/api/kakao/callback',
@@ -43,10 +43,41 @@ export default function KakaoCallbackClient() {
                 }
             );
 
-            console.log('[Kakao Callback Client] API 응답 상태:', response.status);
+            console.log('[Kakao Callback Client] API 응답 상태:', response.status, response.statusText);
 
-            const data = await response.json();
-            console.log('[Kakao Callback Client] API 응답 데이터:', data);
+            // 응답이 성공적이지 않으면 에러 텍스트 확인
+            if (!response.ok) {
+                let errorText = '';
+                try {
+                    errorText = await response.text();
+                    console.error('[Kakao Callback Client] API 오류 응답:', errorText);
+                    const errorData = JSON.parse(errorText);
+                    console.error('[Kakao Callback Client] 파싱된 에러 데이터:', errorData);
+                    
+                    if (errorData.redirectUrl) {
+                        router.push(errorData.redirectUrl);
+                    } else {
+                        router.push('/');
+                    }
+                    return;
+                } catch (parseError) {
+                    console.error('[Kakao Callback Client] JSON 파싱 실패:', parseError);
+                    console.error('[Kakao Callback Client] 원본 에러 텍스트:', errorText);
+                    router.push('/');
+                    return;
+                }
+            }
+
+            // 성공적인 응답 파싱
+            let data;
+            try {
+                data = await response.json();
+                console.log('[Kakao Callback Client] API 응답 데이터:', data);
+            } catch (jsonError) {
+                console.error('[Kakao Callback Client] JSON 파싱 오류:', jsonError);
+                router.push('/');
+                return;
+            }
 
             if (data.success === true || response.ok) {
                 const redirectUrl = data.redirectUrl || '/dashboard/kakao';
@@ -64,6 +95,8 @@ export default function KakaoCallbackClient() {
             }
         } catch (error) {
             console.error('[Kakao Callback Client] 예외 발생:', error);
+            console.error('[Kakao Callback Client] 에러 타입:', error instanceof Error ? error.constructor.name : typeof error);
+            console.error('[Kakao Callback Client] 에러 메시지:', error instanceof Error ? error.message : String(error));
             console.error('[Kakao Callback Client] 에러 스택:', error instanceof Error ? error.stack : '스택 없음');
             router.push('/');
         }
