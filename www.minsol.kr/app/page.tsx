@@ -8,9 +8,8 @@ export default function Home() {
   const handleGoogleLogin = async () => {
     // 구글 로그인 로직 추가
     try {
-      // 먼저 인증 URL을 가져옴
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-      const authUrlResponse = await fetch(`${apiUrl}/api/auth/google/auth-url`, {
+      // Next.js API 라우트를 통해 인증 URL을 가져옴
+      const authUrlResponse = await fetch('/api/google/auth-url', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -39,9 +38,8 @@ export default function Home() {
   const handleKakaoLogin = async () => {
     // 카카오 로그인 로직 추가
     try {
-      // 먼저 인증 URL을 가져옴
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-      const authUrlResponse = await fetch(`${apiUrl}/api/auth/kakao/auth-url`, {
+      // Next.js API 라우트를 통해 인증 URL을 가져옴
+      const authUrlResponse = await fetch('/api/kakao/auth-url', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,9 +68,8 @@ export default function Home() {
   const handleNaverLogin = async () => {
     // 네이버 로그인 로직 추가
     try {
-      // 먼저 인증 URL을 가져옴
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-      const authUrlResponse = await fetch(`${apiUrl}/api/auth/naver/auth-url`, {
+      // Next.js API 라우트를 통해 인증 URL을 가져옴
+      const authUrlResponse = await fetch('/api/naver/auth-url', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
