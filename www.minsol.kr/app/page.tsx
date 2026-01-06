@@ -8,171 +8,95 @@ export default function Home() {
   const handleGoogleLogin = async () => {
     // 구글 로그인 로직 추가
     try {
-      const data = await callGoogleGateway();
-      console.log("구글 로그인 응답:", data);
+      // 먼저 인증 URL을 가져옴
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+      const authUrlResponse = await fetch(`${apiUrl}/api/auth/google/auth-url`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
 
-      // 백엔드에서 구글 인증 URL이 오면 해당 URL로 리다이렉트
-      // 콜백 URL이 아닌 구글 인증 URL인지 확인 (accounts.google.com 포함)
-      const authUrl = data.redirectUrl || data.url || data.authUrl || data.authorizationUrl;
-      if (authUrl && (authUrl.includes('accounts.google.com') || authUrl.includes('oauth.google.com'))) {
+      if (!authUrlResponse.ok) {
+        throw new Error(`HTTP error! status: ${authUrlResponse.status}`);
+      }
+
+      const authUrlData = await authUrlResponse.json();
+      const authUrl = authUrlData.auth_url;
+
+      if (authUrl) {
+        // 인증 URL로 리다이렉트
         window.location.href = authUrl;
-        return;
-      }
-
-      // 백엔드에서 로그인 성공 메시지가 오면 대시보드로 이동
-      // 다양한 메시지 형식 지원
-      const message = data.message || data.msg || data.status;
-      if (
-        message === "구글 로그인 성공" ||
-        message === "로그인 성공" ||
-        message === "success" ||
-        data.success === true ||
-        data.status === "success"
-      ) {
-        router.push('/dashboard/google');
-        return;
-      }
-
-      // JSON 응답이 성공적으로 왔지만 메시지가 없는 경우에도 대시보드로 이동
-      if (data && typeof data === 'object') {
-        router.push('/dashboard/google');
+      } else {
+        console.error("구글 인증 URL을 받을 수 없습니다.");
       }
     } catch (error) {
       console.error("구글 로그인 실패:", error);
     }
   };
 
-  async function callGoogleGateway() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-    const res = await fetch(`${apiUrl}/api/auth/google/login`, {
-      method: "POST",
-      credentials: "include", // 쿠키를 쓰면 필요
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({}), // 빈 객체 전송 (required = false이므로)
-    });
-
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-
-    const data = await res.json();
-    return data;
-  };
-
   const handleKakaoLogin = async () => {
     // 카카오 로그인 로직 추가
     try {
-      const data = await callGateway();
-      console.log("카카오 로그인 응답:", data);
+      // 먼저 인증 URL을 가져옴
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+      const authUrlResponse = await fetch(`${apiUrl}/api/auth/kakao/auth-url`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
 
-      // 백엔드에서 카카오 인증 URL이 오면 해당 URL로 리다이렉트
-      // 콜백 URL이 아닌 카카오 인증 URL인지 확인 (kauth.kakao.com 또는 oauth.kakao.com 포함)
-      const authUrl = data.redirectUrl || data.url || data.authUrl || data.authorizationUrl;
-      if (authUrl && (authUrl.includes('kauth.kakao.com') || authUrl.includes('oauth.kakao.com'))) {
+      if (!authUrlResponse.ok) {
+        throw new Error(`HTTP error! status: ${authUrlResponse.status}`);
+      }
+
+      const authUrlData = await authUrlResponse.json();
+      const authUrl = authUrlData.auth_url;
+
+      if (authUrl) {
+        // 인증 URL로 리다이렉트
         window.location.href = authUrl;
-        return;
-      }
-
-      // 백엔드에서 로그인 성공 메시지가 오면 대시보드로 이동
-      // 다양한 메시지 형식 지원
-      const message = data.message || data.msg || data.status;
-      if (
-        message === "카카오 로그인 성공" ||
-        message === "로그인 성공" ||
-        message === "success" ||
-        data.success === true ||
-        data.status === "success"
-      ) {
-        router.push('/dashboard/kakao');
-        return;
-      }
-
-      // JSON 응답이 성공적으로 왔지만 메시지가 없는 경우에도 대시보드로 이동
-      if (data && typeof data === 'object') {
-        router.push('/dashboard/kakao');
+      } else {
+        console.error("카카오 인증 URL을 받을 수 없습니다.");
       }
     } catch (error) {
       console.error("카카오 로그인 실패:", error);
     }
   };
 
-  async function callGateway() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-    const res = await fetch(`${apiUrl}/api/auth/kakao/login`, {
-      method: "POST",
-      credentials: "include", // 쿠키를 쓰면 필요
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({}), // 빈 객체 전송 (required = false이므로)
-    });
-
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-
-    const data = await res.json();
-    return data;
-  };
-
   const handleNaverLogin = async () => {
     // 네이버 로그인 로직 추가
     try {
-      const data = await callNaverGateway();
-      console.log("네이버 로그인 응답:", data);
+      // 먼저 인증 URL을 가져옴
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+      const authUrlResponse = await fetch(`${apiUrl}/api/auth/naver/auth-url`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
 
-      // 백엔드에서 네이버 인증 URL이 오면 해당 URL로 리다이렉트
-      // 콜백 URL이 아닌 네이버 인증 URL인지 확인 (nid.naver.com 포함)
-      const authUrl = data.redirectUrl || data.url || data.authUrl || data.authorizationUrl;
-      if (authUrl && (authUrl.includes('nid.naver.com') || authUrl.includes('oauth.naver.com'))) {
+      if (!authUrlResponse.ok) {
+        throw new Error(`HTTP error! status: ${authUrlResponse.status}`);
+      }
+
+      const authUrlData = await authUrlResponse.json();
+      const authUrl = authUrlData.auth_url;
+
+      if (authUrl) {
+        // 인증 URL로 리다이렉트
         window.location.href = authUrl;
-        return;
-      }
-
-      // 백엔드에서 로그인 성공 메시지가 오면 대시보드로 이동
-      // 다양한 메시지 형식 지원
-      const message = data.message || data.msg || data.status;
-      if (
-        message === "네이버 로그인 성공" ||
-        message === "로그인 성공" ||
-        message === "success" ||
-        data.success === true ||
-        data.status === "success"
-      ) {
-        router.push('/dashboard/naver');
-        return;
-      }
-
-      // JSON 응답이 성공적으로 왔지만 메시지가 없는 경우에도 대시보드로 이동
-      if (data && typeof data === 'object') {
-        router.push('/dashboard/naver');
+      } else {
+        console.error("네이버 인증 URL을 받을 수 없습니다.");
       }
     } catch (error) {
       console.error("네이버 로그인 실패:", error);
     }
   };
-
-  async function callNaverGateway() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-    const res = await fetch(`${apiUrl}/api/auth/naver/login`, {
-      method: "POST",
-      credentials: "include", // 쿠키를 쓰면 필요
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({}), // 빈 객체 전송 (required = false이므로)
-    });
-
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-
-    const data = await res.json();
-    return data;
-  }
-
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white font-sans">
