@@ -1,24 +1,26 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // URL 파라미터에서 에러 확인 및 콘솔에 출력
+  // URL 파라미터에서 에러 확인 및 콘솔에 출력 (클라이언트 사이드에서만)
   useEffect(() => {
-    const error = searchParams.get('error');
-    if (error) {
-      console.error('[로그인 페이지] URL 파라미터에서 에러 감지:', decodeURIComponent(error));
-      console.error('[로그인 페이지] 전체 URL:', window.location.href);
-      // URL에서 에러 파라미터 제거
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('error');
-      router.replace(newUrl.pathname + newUrl.search);
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      if (error) {
+        console.error('[로그인 페이지] URL 파라미터에서 에러 감지:', decodeURIComponent(error));
+        console.error('[로그인 페이지] 전체 URL:', window.location.href);
+        // URL에서 에러 파라미터 제거
+        urlParams.delete('error');
+        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        router.replace(newUrl);
+      }
     }
-  }, [searchParams, router]);
+  }, [router]);
 
   const handleGoogleLogin = async () => {
     // 구글 로그인 로직 추가
