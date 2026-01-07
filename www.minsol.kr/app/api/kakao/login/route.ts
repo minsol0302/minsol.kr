@@ -3,12 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
     try {
         // 백엔드 서버로 요청 프록시
-        let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-        // 프로토콜이 없으면 https:// 추가
-        if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-            apiUrl = `https://${apiUrl}`;
-        }
-        const backendUrl = `${apiUrl}/api/auth/kakao/login`;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const backendUrl = `https://${apiUrl}/api/auth/kakao/login`;
 
         // 요청 body를 읽어서 백엔드로 전달
         const body = await request.json().catch(() => ({}));

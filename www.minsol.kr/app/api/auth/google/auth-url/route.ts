@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-    // 환경 변수에서 API URL 가져오기 (프로토콜이 없으면 추가)
-    // 커밋을 위한 더미
-    let apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-    // 프로토콜이 없으면 https:// 추가
-    if (apiUrl && !apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-        apiUrl = `https://${apiUrl}`;
-    }
-
-    const backendUrl = `${apiUrl}/api/auth/google/auth-url`;
+    const backendUrl = `https://${apiUrl}/api/auth/google/auth-url`;
 
     console.log('[Google Auth-URL] 시작 - 백엔드 URL:', backendUrl);
 

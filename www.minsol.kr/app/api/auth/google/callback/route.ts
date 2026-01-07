@@ -29,11 +29,8 @@ export async function POST(request: NextRequest) {
         }
 
         // 백엔드 콜백 엔드포인트로 프록시
-        let apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-        if (apiUrl && !apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-            apiUrl = `https://${apiUrl}`;
-        }
-        const backendUrl = `${apiUrl}/api/auth/google/callback`;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const backendUrl = `https://${apiUrl}/api/auth/google/callback`;
 
         console.log('[Google Callback POST] 백엔드로 요청 전송:', backendUrl);
         console.log('[Google Callback POST] 요청 body:', { code: code?.substring(0, 20) + '...' });
@@ -64,7 +61,7 @@ export async function POST(request: NextRequest) {
         if (!response.ok) {
             const errorText = await response.text().catch(() => '');
             console.error('[Google Callback POST] 백엔드 오류:', response.status, errorText);
-            
+
             try {
                 const errorData = JSON.parse(errorText);
                 return NextResponse.json({
@@ -152,12 +149,8 @@ export async function GET(request: NextRequest) {
         }
 
         // 백엔드 콜백 엔드포인트로 프록시
-        let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-        // 프로토콜이 없으면 https:// 추가
-        if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-            apiUrl = `https://${apiUrl}`;
-        }
-        const backendUrl = `${apiUrl}/api/auth/google/callback?code=${encodeURIComponent(code)}`;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const backendUrl = `https://${apiUrl}/api/auth/google/callback?code=${encodeURIComponent(code)}`;
         console.log('백엔드로 요청 전송:', backendUrl.substring(0, 80) + '...');
 
         const response = await fetch(backendUrl, {
@@ -176,7 +169,7 @@ export async function GET(request: NextRequest) {
             const redirectUrl = response.headers.get('Location');
             if (redirectUrl) {
                 console.log('백엔드 리다이렉트 URL:', redirectUrl);
-                
+
                 // 리다이렉트 URL에서 토큰 파라미터 추출
                 const redirectUrlObj = new URL(redirectUrl);
                 const token = redirectUrlObj.searchParams.get('token');
@@ -190,7 +183,7 @@ export async function GET(request: NextRequest) {
 
                 // 🔒 Refresh Token을 HttpOnly 쿠키에 저장
                 const nextResponse = NextResponse.redirect(new URL('/dashboard/google', request.url));
-                
+
                 if (refreshToken) {
                     return handleLoginSuccess(
                         nextResponse,

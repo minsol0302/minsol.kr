@@ -29,11 +29,8 @@ export async function POST(request: NextRequest) {
         }
 
         // 백엔드 콜백 엔드포인트로 프록시
-        let apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-        if (apiUrl && !apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-            apiUrl = `https://${apiUrl}`;
-        }
-        const backendUrl = `${apiUrl}/api/auth/kakao/callback`;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const backendUrl = `https://${apiUrl}/api/auth/kakao/callback`;
 
         console.log('[Kakao Callback POST] 백엔드로 요청 전송:', backendUrl);
 
@@ -143,11 +140,8 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(new URL('/', request.url));
         }
 
-        let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-        if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-            apiUrl = `https://${apiUrl}`;
-        }
-        const backendUrl = `${apiUrl}/api/auth/kakao/callback?code=${encodeURIComponent(code)}`;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const backendUrl = `https://${apiUrl}/api/auth/kakao/callback?code=${encodeURIComponent(code)}`;
 
         const response = await fetch(backendUrl, {
             method: 'GET',

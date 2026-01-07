@@ -18,11 +18,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 백엔드 API URL
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'api.minsol.kr';
-    const backendUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     // 백엔드에 Refresh Token 전달하여 새로운 Access Token 요청
-    const response = await fetch(`${backendUrl}/api/auth/refresh`, {
+    const response = await fetch(`https://${apiUrl}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -20,11 +20,10 @@ export async function POST(request: NextRequest) {
     const accessToken = authHeader.substring(7); // "Bearer " 제거
 
     // 백엔드 API URL
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'api.minsol.kr';
-    const backendUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     // 백엔드에 Access Token 전달하여 유효성 검증
-    const response = await fetch(`${backendUrl}/api/auth/validate`, {
+    const response = await fetch(`https://${apiUrl}/api/auth/validate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

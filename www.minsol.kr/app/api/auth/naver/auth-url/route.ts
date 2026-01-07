@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-    let apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-    if (apiUrl && !apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-        apiUrl = `https://${apiUrl}`;
-    }
-
-    const backendUrl = `${apiUrl}/api/auth/naver/auth-url`;
+    const backendUrl = `https://${apiUrl}/api/auth/naver/auth-url`;
 
     console.log('[Naver Auth-URL] 시작 - 백엔드 URL:', backendUrl);
 

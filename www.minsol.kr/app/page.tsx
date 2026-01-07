@@ -27,17 +27,16 @@ export default function Home() {
     try {
       console.log('[구글 로그인] 시작');
       // 백엔드 API 직접 호출
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-      const backendApiUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-      const authUrlResponse = await fetch(`${backendApiUrl}/api/auth/google/auth-url`, {
+      const authUrlResponse = await fetch(`https://${apiUrl}/api/auth/google/auth-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
       });
-   
+
       console.log('[구글 로그인] API 응답 상태:', authUrlResponse.status);
 
       if (!authUrlResponse.ok) {
@@ -103,10 +102,9 @@ export default function Home() {
     try {
       console.log('[카카오 로그인] 시작');
       // 백엔드 API 직접 호출
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-      const backendApiUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-      const authUrlResponse = await fetch(`${backendApiUrl}/api/auth/kakao/auth-url`, {
+      const authUrlResponse = await fetch(`https://${apiUrl}/api/auth/kakao/auth-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -153,10 +151,9 @@ export default function Home() {
     try {
       console.log('[네이버 로그인] 시작');
       // 백엔드 API 직접 호출
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
-      const backendApiUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-      const authUrlResponse = await fetch(`${backendApiUrl}/api/auth/naver/auth-url`, {
+      const authUrlResponse = await fetch(`https://${apiUrl}/api/auth/naver/auth-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
