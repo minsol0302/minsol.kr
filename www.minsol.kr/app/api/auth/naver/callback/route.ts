@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 백엔드 콜백 엔드포인트로 프록시
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'api.minsol.kr';
         const backendUrl = `https://${apiUrl}/api/auth/naver/callback`;
 
         console.log('[Naver Callback POST] 백엔드로 요청 전송:', backendUrl);
@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(new URL('/', request.url));
         }
 
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'api.minsol.kr';
         const backendUrl = `https://${apiUrl}/api/auth/naver/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ''}`;
 
         const response = await fetch(backendUrl, {

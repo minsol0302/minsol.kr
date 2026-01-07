@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 백엔드 콜백 엔드포인트로 프록시
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'api.minsol.kr';
         const backendUrl = `https://${apiUrl}/api/auth/google/callback`;
 
         console.log('[Google Callback POST] 백엔드로 요청 전송:', backendUrl);
@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
         }
 
         // 백엔드 콜백 엔드포인트로 프록시
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'api.minsol.kr';
         const backendUrl = `https://${apiUrl}/api/auth/google/callback?code=${encodeURIComponent(code)}`;
         console.log('백엔드로 요청 전송:', backendUrl.substring(0, 80) + '...');
 

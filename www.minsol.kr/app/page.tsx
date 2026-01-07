@@ -27,7 +27,12 @@ export default function Home() {
     try {
       console.log('[구글 로그인] 시작');
       // 백엔드 API 직접 호출
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'api.minsol.kr';
+
+      if (!apiUrl) {
+        alert('API URL이 설정되지 않았습니다. 환경 변수를 확인해주세요.');
+        return;
+      }
 
       const authUrlResponse = await fetch(`https://${apiUrl}/api/auth/google/auth-url`, {
         method: "POST",
@@ -102,7 +107,12 @@ export default function Home() {
     try {
       console.log('[카카오 로그인] 시작');
       // 백엔드 API 직접 호출
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'api.minsol.kr';
+
+      if (!apiUrl) {
+        alert('API URL이 설정되지 않았습니다. 환경 변수를 확인해주세요.');
+        return;
+      }
 
       const authUrlResponse = await fetch(`https://${apiUrl}/api/auth/kakao/auth-url`, {
         method: "POST",
@@ -151,7 +161,12 @@ export default function Home() {
     try {
       console.log('[네이버 로그인] 시작');
       // 백엔드 API 직접 호출
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'api.minsol.kr';
+
+      if (!apiUrl) {
+        alert('API URL이 설정되지 않았습니다. 환경 변수를 확인해주세요.');
+        return;
+      }
 
       const authUrlResponse = await fetch(`https://${apiUrl}/api/auth/naver/auth-url`, {
         method: "POST",
