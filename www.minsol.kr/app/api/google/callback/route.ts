@@ -85,35 +85,41 @@ export async function POST(request: NextRequest) {
         const data = await response.json();
         console.log('[Google Callback POST] 백엔드 응답 데이터:', data);
 
-        // Refresh Token을 HttpOnly 쿠키에 저장할 수 있도록 redirectUrl 반환
-        const redirectUrl = data.redirectUrl || '/dashboard/google';
+        // 백엔드에서 받은 토큰과 사용자 정보 추출
+        const accessToken = data.token || data.accessToken;
         const refreshToken = data.refresh_token || data.refreshToken;
+        const redirectUrl = data.redirectUrl || '/dashboard/google';
 
+        // 사용자 정보 추출 (백엔드 응답에서)
+        const user = data.user || {
+            id: data.userId || data.id || '',
+            email: data.email,
+            nickname: data.nickname || data.name,
+            profileImage: data.profileImage || data.picture,
+            provider: 'google' as const,
+        };
+
+        // 응답 생성
+        const nextResponse = NextResponse.json({
+            success: true,
+            message: data.message || '로그인 성공',
+            accessToken: accessToken,
+            user: user,
+            redirectUrl: redirectUrl
+        });
+
+        // Refresh Token을 HttpOnly 쿠키에 저장
         if (refreshToken) {
-            // 쿠키를 설정하기 위해 응답을 생성
-            const nextResponse = NextResponse.json({
-                success: true,
-                message: data.message || '로그인 성공',
-                token: data.token,
-                redirectUrl: redirectUrl
-            });
-
             return handleLoginSuccess(
                 nextResponse,
                 refreshToken,
                 {
-                    maxAge: 30 * 24 * 60 * 60,
-                    redirectUrl: redirectUrl
+                    maxAge: 30 * 24 * 60 * 60, // 30일
                 }
             );
         }
 
-        return NextResponse.json({
-            success: true,
-            message: data.message || '로그인 성공',
-            token: data.token,
-            redirectUrl: redirectUrl
-        });
+        return nextResponse;
     } catch (error) {
         console.error('[Google Callback POST] 예외 발생:', error);
         return NextResponse.json({

@@ -36,34 +36,96 @@ export async function POST(request: NextRequest) {
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
         try {
-            const response = await fetch(backendUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify(body),
-                signal: controller.signal,
-            });
+            // 백엔드 연결 시도 (재시도 로직 포함)
+            let response: Response | null = null;
+            const maxRetries = 2;
+
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    if (attempt > 0) {
+                        console.log(`[Google Auth-URL] 재시도 ${attempt}/${maxRetries}...`);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // 지수 백오프
+                    }
+
+                    response = await fetch(backendUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'User-Agent': 'Minsol-Frontend/1.0',
+                        },
+                        body: JSON.stringify(body),
+                        signal: controller.signal,
+                    });
+
+                    // 502, 503 오류가 아닌 경우 재시도 중단
+                    if (response.ok || (response.status !== 502 && response.status !== 503)) {
+                        break;
+                    }
+
+                    // 마지막 시도가 아니면 재시도
+                    if (attempt < maxRetries) {
+                        console.warn(`[Google Auth-URL] 백엔드 오류 (${response.status}), 재시도 예정...`);
+                        continue;
+                    }
+                } catch (fetchError) {
+                    const lastError = fetchError instanceof Error ? fetchError : new Error(String(fetchError));
+
+                    // 마지막 시도가 아니면 재시도
+                    if (attempt < maxRetries) {
+                        console.warn(`[Google Auth-URL] 네트워크 오류, 재시도 예정...`, lastError.message);
+                        continue;
+                    }
+
+                    throw fetchError;
+                }
+            }
 
             clearTimeout(timeoutId);
+
+            // response가 null인 경우 처리
+            if (!response) {
+                throw new Error('백엔드 서버에 연결할 수 없습니다.');
+            }
 
             console.log('[Google Auth-URL] 백엔드 응답 상태:', response.status);
 
             if (!response.ok) {
-                const errorText = await response.text().catch(() => '');
+                let errorText = '';
+                try {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorText = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } else {
+                        // HTML 응답인 경우 (502 Bad Gateway 등)
+                        errorText = await response.text().catch(() => '');
+                        // HTML 태그 제거
+                        if (errorText.includes('<html>') || errorText.includes('502')) {
+                            errorText = '백엔드 서버에 연결할 수 없습니다. 서버가 다운되었거나 네트워크 문제가 있을 수 있습니다.';
+                        }
+                    }
+                } catch (e) {
+                    errorText = `백엔드 서버 오류 (${response.status})`;
+                }
+
                 console.error('[Google Auth-URL] 백엔드 오류:', {
                     status: response.status,
                     statusText: response.statusText,
                     errorText: errorText.substring(0, 200)
                 });
+
+                // 502 Bad Gateway는 서버 연결 문제이므로 503으로 변경하여 처리
+                const statusCode = response.status === 502 ? 503 : response.status;
+
                 return NextResponse.json(
                     {
                         success: false,
-                        error: `Backend error: ${response.status}`,
-                        message: errorText || `백엔드 서버 오류 (${response.status})`
+                        error: statusCode === 502 ? 'Bad Gateway' : `Backend error: ${response.status}`,
+                        message: errorText || `백엔드 서버 오류 (${response.status})`,
+                        status: response.status
                     },
-                    { status: response.status }
+                    { status: statusCode }
                 );
             }
 

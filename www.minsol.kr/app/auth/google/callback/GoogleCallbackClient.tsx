@@ -2,10 +2,13 @@
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuthStore } from '@/store/auth.store';
+import { extractUserFromToken } from '@/utils/jwt';
 
 export default function GoogleCallbackClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const login = useAuthStore((state) => state.login);
 
     useEffect(() => {
         // URL에서 code 파라미터 확인
@@ -53,7 +56,7 @@ export default function GoogleCallbackClient() {
                     console.error('[Google Callback Client] API 오류 응답:', errorText);
                     const errorData = JSON.parse(errorText);
                     console.error('[Google Callback Client] 파싱된 에러 데이터:', errorData);
-                    
+
                     if (errorData.redirectUrl) {
                         router.push(errorData.redirectUrl);
                     } else {
@@ -80,6 +83,28 @@ export default function GoogleCallbackClient() {
             }
 
             if (data.success === true || response.ok) {
+                // Access Token과 사용자 정보를 스토어에 저장
+                const accessToken = data.accessToken || data.token;
+
+                if (accessToken) {
+                    // 사용자 정보가 응답에 있으면 사용, 없으면 JWT에서 추출
+                    let user = data.user;
+
+                    if (!user && accessToken) {
+                        // JWT 토큰에서 사용자 정보 추출
+                        user = extractUserFromToken(accessToken);
+                    }
+
+                    if (user) {
+                        console.log('[Google Callback Client] Access Token과 사용자 정보를 스토어에 저장');
+                        login(accessToken, user);
+                    } else {
+                        // 사용자 정보를 추출할 수 없으면 Access Token만 저장
+                        console.log('[Google Callback Client] Access Token만 스토어에 저장 (사용자 정보 없음)');
+                        useAuthStore.getState().setAccessToken(accessToken);
+                    }
+                }
+
                 const redirectUrl = data.redirectUrl || '/dashboard/google';
                 console.log('[Google Callback Client] 로그인 성공, 리다이렉트:', redirectUrl);
                 router.push(redirectUrl);

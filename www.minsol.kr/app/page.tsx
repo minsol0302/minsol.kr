@@ -38,15 +38,41 @@ export default function Home() {
       console.log('[구글 로그인] API 응답 상태:', authUrlResponse.status);
 
       if (!authUrlResponse.ok) {
-        const errorData = await authUrlResponse.json().catch(() => ({}));
-        const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${authUrlResponse.status}`;
+        let errorMessage = `HTTP 오류 (${authUrlResponse.status})`;
+        let errorData: any = {};
+
+        try {
+          const contentType = authUrlResponse.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            errorData = await authUrlResponse.json();
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } else {
+            // HTML 응답인 경우 (502 Bad Gateway 등)
+            const text = await authUrlResponse.text();
+            if (text.includes('502 Bad Gateway') || text.includes('<html>')) {
+              errorMessage = '백엔드 서버에 연결할 수 없습니다. 서버 상태를 확인 중이니 잠시 후 다시 시도해주세요.';
+            } else {
+              errorMessage = text.substring(0, 200) || errorMessage;
+            }
+          }
+        } catch (parseError) {
+          console.error('[구글 로그인] 응답 파싱 오류:', parseError);
+          errorMessage = `서버 응답 오류 (${authUrlResponse.status})`;
+        }
+
         console.error('[구글 로그인] 오류 상세:', {
           status: authUrlResponse.status,
           statusText: authUrlResponse.statusText,
           error: errorData,
           message: errorMessage
         });
-        alert(`구글 로그인 실패: ${errorMessage}`);
+
+        // 502, 503 오류는 서버 연결 문제
+        if (authUrlResponse.status === 502 || authUrlResponse.status === 503) {
+          alert('백엔드 서버에 연결할 수 없습니다.\n서버 관리자에게 문의하거나 잠시 후 다시 시도해주세요.');
+        } else {
+          alert(`구글 로그인 실패: ${errorMessage}`);
+        }
         return;
       }
 
