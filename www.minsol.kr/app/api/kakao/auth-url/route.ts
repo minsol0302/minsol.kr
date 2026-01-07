@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
+// 토큰 저장 test
 export async function POST(request: NextRequest) {
     // 백엔드 서버로 요청 프록시
     // 환경 변수에서 API URL 가져오기 (프로토콜이 없으면 추가)
