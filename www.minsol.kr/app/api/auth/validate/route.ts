@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     // Authorization 헤더에서 Access Token 가져오기
     const authHeader = request.headers.get('authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { error: 'Access Token이 없습니다' },
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const accessToken = authHeader.substring(7); // "Bearer " 제거
 
     // 백엔드 API URL
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8080';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'api.minsol.kr';
     const backendUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
 
     // 백엔드에 Access Token 전달하여 유효성 검증

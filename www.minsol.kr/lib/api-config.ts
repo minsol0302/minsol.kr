@@ -9,7 +9,7 @@ export function getApiUrl(): string {
     if (!apiUrl) {
         // 개발 환경에서는 localhost 사용
         if (process.env.NODE_ENV === 'development') {
-            return 'http://localhost:8080';
+            return 'api.minsol.kr';
         }
         throw new Error('NEXT_PUBLIC_API_URL 환경 변수가 설정되지 않았습니다.');
     }

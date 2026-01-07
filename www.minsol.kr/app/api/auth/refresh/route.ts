@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 백엔드 API URL
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8080';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'api.minsol.kr';
     const backendUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
 
     // 백엔드에 Refresh Token 전달하여 새로운 Access Token 요청
