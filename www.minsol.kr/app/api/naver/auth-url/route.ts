@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
         apiUrl = `https://${apiUrl}`;
     }
 
-    const backendUrl = `${apiUrl}/api/auth/naver/auth-url`;
+    const backendUrl = `${apiUrl}/api/naver/auth-url`;
 
     console.log('[Naver Auth-URL] 시작 - 백엔드 URL:', backendUrl);
 

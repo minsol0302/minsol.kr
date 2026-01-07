@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
         apiUrl = `https://${apiUrl}`;
     }
 
-    const backendUrl = `${apiUrl}/api/auth/google/auth-url`;
+    const backendUrl = `${apiUrl}/api/google/auth-url`;
 
     console.log('[Google Auth-URL] 시작 - 백엔드 URL:', backendUrl);
 

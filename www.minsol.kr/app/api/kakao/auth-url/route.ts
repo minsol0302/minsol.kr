@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
         apiUrl = `https://${apiUrl}`;
     }
 
-    const backendUrl = `${apiUrl}/api/auth/kakao/auth-url`;
+    const backendUrl = `${apiUrl}/api/kakao/auth-url`;
 
     console.log('[Kakao Auth-URL] 시작 - 백엔드 URL:', backendUrl);
 
