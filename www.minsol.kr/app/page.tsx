@@ -27,7 +27,7 @@ export default function Home() {
     try {
       console.log('[구글 로그인] 시작');
       // Next.js API 라우트를 통해 인증 URL을 가져옴
-      const authUrlResponse = await fetch('/api/google/auth-url', {
+      const authUrlResponse = await fetch('/api/auth/google/auth-url', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -100,7 +100,7 @@ export default function Home() {
     try {
       console.log('[카카오 로그인] 시작');
       // Next.js API 라우트를 통해 인증 URL을 가져옴
-      const authUrlResponse = await fetch('/api/kakao/auth-url', {
+      const authUrlResponse = await fetch('/api/auth/kakao/auth-url', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -147,7 +147,7 @@ export default function Home() {
     try {
       console.log('[네이버 로그인] 시작');
       // Next.js API 라우트를 통해 인증 URL을 가져옴
-      const authUrlResponse = await fetch('/api/naver/auth-url', {
+      const authUrlResponse = await fetch('/api/auth/naver/auth-url', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

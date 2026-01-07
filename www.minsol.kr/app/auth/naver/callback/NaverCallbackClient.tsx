@@ -35,7 +35,7 @@ export default function NaverCallbackClient() {
             console.log('[Naver Callback Client] Next.js API 라우트로 요청 전송, code:', code?.substring(0, 20) + '...', 'state:', state);
             // Next.js API 라우트를 통해 요청 (서버 사이드 프록시)
             const response = await fetch(
-                '/api/naver/callback',
+                '/api/auth/naver/callback',
                 {
                     method: 'POST',
                     credentials: 'include',

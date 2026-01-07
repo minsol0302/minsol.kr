@@ -35,7 +35,7 @@ export default function GoogleCallbackClient() {
             console.log('[Google Callback Client] Next.js API 라우트로 요청 전송, code:', code?.substring(0, 20) + '...');
             // Next.js API 라우트를 통해 요청 (서버 사이드 프록시)
             const response = await fetch(
-                '/api/google/callback',
+                '/api/auth/google/callback',
                 {
                     method: 'POST',
                     credentials: 'include',

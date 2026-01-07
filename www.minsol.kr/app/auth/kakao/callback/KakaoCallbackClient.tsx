@@ -32,7 +32,7 @@ export default function KakaoCallbackClient() {
             console.log('[Kakao Callback Client] Next.js API 라우트로 요청 전송, code:', code?.substring(0, 20) + '...');
             // Next.js API 라우트를 통해 요청 (서버 사이드 프록시)
             const response = await fetch(
-                '/api/kakao/callback',
+                '/api/auth/kakao/callback',
                 {
                     method: 'POST',
                     credentials: 'include',
