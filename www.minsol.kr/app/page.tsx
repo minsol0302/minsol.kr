@@ -26,15 +26,18 @@ export default function Home() {
     // 구글 로그인 로직 추가
     try {
       console.log('[구글 로그인] 시작');
-      // Next.js API 라우트를 통해 인증 URL을 가져옴
-      const authUrlResponse = await fetch('/api/auth/google/auth-url', {
+      // 백엔드 API 직접 호출
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+      const backendApiUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
+
+      const authUrlResponse = await fetch(`${backendApiUrl}/api/auth/google/auth-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
       });
-
+   
       console.log('[구글 로그인] API 응답 상태:', authUrlResponse.status);
 
       if (!authUrlResponse.ok) {
@@ -99,8 +102,11 @@ export default function Home() {
     // 카카오 로그인 로직 추가
     try {
       console.log('[카카오 로그인] 시작');
-      // Next.js API 라우트를 통해 인증 URL을 가져옴
-      const authUrlResponse = await fetch('/api/auth/kakao/auth-url', {
+      // 백엔드 API 직접 호출
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+      const backendApiUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
+
+      const authUrlResponse = await fetch(`${backendApiUrl}/api/auth/kakao/auth-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -146,8 +152,11 @@ export default function Home() {
     // 네이버 로그인 로직 추가
     try {
       console.log('[네이버 로그인] 시작');
-      // Next.js API 라우트를 통해 인증 URL을 가져옴
-      const authUrlResponse = await fetch('/api/auth/naver/auth-url', {
+      // 백엔드 API 직접 호출
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.minsol.kr';
+      const backendApiUrl = apiUrl.startsWith('http') ? apiUrl : `https://${apiUrl}`;
+
+      const authUrlResponse = await fetch(`${backendApiUrl}/api/auth/naver/auth-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
